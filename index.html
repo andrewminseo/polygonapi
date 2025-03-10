@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+<div class="grid grid-cols-2 gap-2 mb-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">RSI (14)</p>
+                        <p class="font-bold ${rsi > 70 ? 'negative' : (rsi < 30 ? 'positive' : '')}">${rsi.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">MACD</p>
+                        <p class="font-bold ${macd.line > macd.signal ? 'positive' : 'negative'}">${macd.line.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">SMA (20)<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -373,7 +383,414 @@
                             </div>
                             <div class="relative">
                                 <canvas id="stockChart" height="300"></canvas>
-                                <div id="trendLines"></div>
+                                <div id="indexAnalysis">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Index Prediction</h3>
+                                <div id="indexPrediction">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Sector Performance</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead>
+                                        <tr class="border-b border-gray-700">
+                                            <th class="py-3 px-6 text-left">Sector</th>
+                                            <th class="py-3 px-6 text-right">Day</th>
+                                            <th class="py-3 px-6 text-right">Week</th>
+                                            <th class="py-3 px-6 text-right">Month</th>
+                                            <th class="py-3 px-6 text-right">YTD</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sectorPerformance">
+                                        <tr>
+                                            <td colspan="5" class="py-4 text-center">
+                                                <div class="loading-spinner"></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Market Indices and News -->
+                    <div class="w-full lg:w-4/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-4">Popular Indices</h3>
+                            <div id="popularIndices">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-4">Economic Calendar</h3>
+                            <div id="economicCalendar">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Market News</h3>
+                            <div id="marketNews">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // API Key for Polygon.io
+        const API_KEY = 'OzpY0a72peA3S0QIMAIq6Iuo78dwtSke';
+        
+        // Global Variables
+        let currentStock = 'AAPL';
+        let currentIndex = 'I:SPX';
+        let stockChart = null;
+        let indexChart = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab Navigation
+            const tabButtons = document.querySelectorAll('.tab-button:not(.chart-interval):not(.options-type-tab):not(.index-interval)');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            });
+            
+            // Chart Interval Navigation
+            const chartIntervals = document.querySelectorAll('.chart-interval');
+            
+            chartIntervals.forEach(interval => {
+                interval.addEventListener('click', () => {
+                    chartIntervals.forEach(int => int.classList.remove('active'));
+                    interval.classList.add('active');
+                    
+                    fetchStockData(currentStock, interval.dataset.interval);
+                });
+            });
+            
+            // Index Interval Navigation
+            const indexIntervals = document.querySelectorAll('.index-interval');
+            
+            indexIntervals.forEach(interval => {
+                interval.addEventListener('click', () => {
+                    indexIntervals.forEach(int => int.classList.remove('active'));
+                    interval.classList.add('active');
+                    
+                    fetchIndexData(currentIndex, interval.dataset.interval);
+                });
+            });
+            
+            // Options Type Tabs
+            const optionsTypeTabs = document.querySelectorAll('.options-type-tab');
+            const optionsContents = document.querySelectorAll('.options-content');
+            
+            optionsTypeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    optionsTypeTabs.forEach(t => t.classList.remove('active'));
+                    optionsContents.forEach(content => content.classList.add('hidden'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.type + 'Options').classList.remove('hidden');
+                });
+            });
+            
+            // Search Functionality
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            
+            searchInput.addEventListener('input', _.debounce(function() {
+                const query = searchInput.value.trim();
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+                
+                searchStocks(query);
+            }, 300));
+            
+            // Hide search results when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+            
+            // Options Symbol Input
+            const optionsSymbolInput = document.getElementById('optionsSymbol');
+            const loadOptionsButton = document.getElementById('loadOptions');
+            
+            optionsSymbolInput.addEventListener('change', function() {
+                const symbol = optionsSymbolInput.value.trim().toUpperCase();
+                if (symbol) {
+                    fetchOptionExpirationDates(symbol);
+                }
+            });
+            
+            loadOptionsButton.addEventListener('click', function() {
+                const symbol = optionsSymbolInput.value.trim().toUpperCase();
+                const expirationDate = document.getElementById('expirationDate').value;
+                
+                if (symbol && expirationDate) {
+                    loadOptionChain(symbol, expirationDate);
+                } else {
+                    alert('Please select both a symbol and expiration date');
+                }
+            });
+            
+            // Strategy Builder
+            const suggestStrategiesButton = document.getElementById('suggestStrategies');
+            
+            suggestStrategiesButton.addEventListener('click', function() {
+                const direction = document.getElementById('marketDirection').value;
+                const risk = document.getElementById('riskTolerance').value;
+                const budget = document.getElementById('optionsBudget').value;
+                
+                if (!budget) {
+                    alert('Please enter a budget amount');
+                    return;
+                }
+                
+                suggestOptionsStrategies(direction, risk, parseFloat(budget));
+            });
+            
+            // Initialize with default data
+            fetchStockData(currentStock, '1M');
+            fetchStockDetails(currentStock);
+            fetchStockNews(currentStock);
+            fetchIndexData(currentIndex, '1M');
+            loadPopularIndices();
+            loadEconomicCalendar();
+            loadMarketNews();
+            loadSectorPerformance();
+        });
+        
+        // Search for stocks
+        function searchStocks(query) {
+            const endpoint = `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(query)}&active=true&limit=10&sort=ticker&apiKey=${API_KEY}`;
+            
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK' && data.results && data.results.length > 0) {
+                        const resultsHTML = data.results
+                            .filter(result => result.market === 'stocks')
+                            .map(result => `
+                                <div class="p-3 hover:bg-gray-700 cursor-pointer search-result" data-symbol="${result.ticker}" data-name="${result.name}">
+                                    <div class="font-bold">${result.ticker}</div>
+                                    <div class="text-sm text-gray-400">${result.name}</div>
+                                </div>
+                            `).join('');
+                        
+                        searchResults.innerHTML = resultsHTML;
+                        searchResults.classList.remove('hidden');
+                        
+                        // Add click event to search results
+                        document.querySelectorAll('.search-result').forEach(result => {
+                            result.addEventListener('click', function() {
+                                const symbol = this.dataset.symbol;
+                                const name = this.dataset.name;
+                                
+                                currentStock = symbol;
+                                document.getElementById('stockSymbol').textContent = symbol;
+                                document.getElementById('stockName').textContent = name;
+                                document.getElementById('searchInput').value = symbol;
+                                
+                                fetchStockData(symbol, '1M');
+                                fetchStockDetails(symbol);
+                                fetchStockNews(symbol);
+                                
+                                searchResults.classList.add('hidden');
+                            });
+                        });
+                    } else {
+                        searchResults.innerHTML = '<div class="p-3 text-gray-400">No results found</div>';
+                        searchResults.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching for stocks:', error);
+                    searchResults.innerHTML = '<div class="p-3 text-gray-400">Error searching for stocks</div>';
+                    searchResults.classList.remove('hidden');
+                });
+        }
+        
+        // Fetch stock data for chart
+        function fetchStockData(symbol, interval) {
+            let multiplier = 1;
+            let timespan = 'day';
+            let from, to;
+            
+            const now = new Date();
+            to = formatDate(now);
+            
+            switch (interval) {
+                case '1D':
+                    multiplier = 5;
+                    timespan = 'minute';
+                    from = formatDate(new Date(now.setDate(now.getDate() - 1)));
+                    break;
+                case '1W':
+                    multiplier = 30;
+                    timespan = 'minute';
+                    from = formatDate(new Date(now.setDate(now.getDate() - 7)));
+                    break;
+                case '1M':
+                    multiplier = 1;
+                    timespan = 'day';
+                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
+                    break;
+                case '3M':
+                    multiplier = 1;
+                    timespan = 'day';
+                    from = formatDate(new Date(now.setMonth(now.getMonth() - 3)));
+                    break;
+                case '1Y':
+                    multiplier = 1;
+                    timespan = 'day';
+                    from = formatDate(new Date(now.setFullYear(now.getFullYear() - 1)));
+                    break;
+                case 'YTD':
+                    multiplier = 1;
+                    timespan = 'day';
+                    from = `${now.getFullYear()}-01-01`;
+                    break;
+                default:
+                    multiplier = 1;
+                    timespan = 'day';
+                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
+            }
+            
+            const endpoint = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/${multiplier}/${timespan}/${from}/${to}?adjusted=true&sort=asc&apiKey=${API_KEY}`;
+            
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK' && data.results && data.results.length > 0) {
+                        renderStockChart(data.results, interval);
+                        updateLatestPrice(data.results[data.results.length - 1], data.results[data.results.length - 2]);
+                        analyseTechnicals(data.results);
+                        makePrediction(data.results);
+                    } else {
+                        console.error('No stock data available');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching stock data:', error);
+                });
+        }
+        
+        // Render stock chart
+        function renderStockChart(data, interval) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            
+            if (stockChart) {
+                stockChart.destroy();
+            }
+            
+            // Prepare data for Chart.js
+            const chartData = {
+                labels: data.map(item => new Date(item.t)),
+                datasets: [{
+                    label: currentStock,
+                    data: data.map(item => item.c),
+                    borderColor: '#00C805',
+                    backgroundColor: 'rgba(0, 200, 5, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#00C805',
+                    pointHoverBorderColor: '#FFFFFF',
+                    fill: true,
+                    tension: 0.1
+                }]
+            };
+            
+            // Chart configuration
+            const config = {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(30, 33, 36, 0.9)',
+                            titleColor: '#FFFFFF',
+                            bodyColor: '#FFFFFF',
+                            borderColor: 'rgba(54, 58, 69, 0.9)',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    if (interval === '1D') {
+                                        return moment(tooltipItems[0].raw).format('h:mm A');
+                                    } else {
+                                        return moment(tooltipItems[0].raw).format('MMM D, YYYY');
+                                    }
+                                },
+                                label: function(context) {
+                                    return `${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: interval === '1D' || interval === '1W' ? 'hour' : 'day',
+                                displayFormats: {
+                                    hour: 'h:mm A',
+                                    day: 'MMM D'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#8A8A8A',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 6
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(54, 58, 69, 0.5)'
+                            },
+                            ticks: {
+                                color: '#8A8A8A',
+                                callback: function(value) {
+                                    return 'trendLines"></div>
                             </div>
                         </div>
 
@@ -661,413 +1078,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div class="robinhood-card p-6">
                                 <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
-                                <div id="indexAnalysis">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Index Prediction</h3>
-                                <div id="indexPrediction">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Sector Performance</h3>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full">
-                                    <thead>
-                                        <tr class="border-b border-gray-700">
-                                            <th class="py-3 px-6 text-left">Sector</th>
-                                            <th class="py-3 px-6 text-right">Day</th>
-                                            <th class="py-3 px-6 text-right">Week</th>
-                                            <th class="py-3 px-6 text-right">Month</th>
-                                            <th class="py-3 px-6 text-right">YTD</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="sectorPerformance">
-                                        <tr>
-                                            <td colspan="5" class="py-4 text-center">
-                                                <div class="loading-spinner"></div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - Market Indices and News -->
-                    <div class="w-full lg:w-4/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <h3 class="text-xl font-bold mb-4">Popular Indices</h3>
-                            <div id="popularIndices">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6 mb-6">
-                            <h3 class="text-xl font-bold mb-4">Economic Calendar</h3>
-                            <div id="economicCalendar">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Market News</h3>
-                            <div id="marketNews">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- JavaScript -->
-    <script>
-        // API Key for Polygon.io
-        const API_KEY = 'OzpY0a72peA3S0QIMAIq6Iuo78dwtSke';
-        
-        // Global Variables
-        let currentStock = 'AAPL';
-        let currentIndex = 'I:SPX';
-        let stockChart = null;
-        let indexChart = null;
-        
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tab Navigation
-            const tabButtons = document.querySelectorAll('.tab-button:not(.chart-interval):not(.options-type-tab):not(.index-interval)');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    button.classList.add('active');
-                    document.getElementById(button.dataset.tab).classList.add('active');
-                });
-            });
-            
-            // Chart Interval Navigation
-            const chartIntervals = document.querySelectorAll('.chart-interval');
-            
-            chartIntervals.forEach(interval => {
-                interval.addEventListener('click', () => {
-                    chartIntervals.forEach(int => int.classList.remove('active'));
-                    interval.classList.add('active');
-                    
-                    fetchStockData(currentStock, interval.dataset.interval);
-                });
-            });
-            
-            // Index Interval Navigation
-            const indexIntervals = document.querySelectorAll('.index-interval');
-            
-            indexIntervals.forEach(interval => {
-                interval.addEventListener('click', () => {
-                    indexIntervals.forEach(int => int.classList.remove('active'));
-                    interval.classList.add('active');
-                    
-                    fetchIndexData(currentIndex, interval.dataset.interval);
-                });
-            });
-            
-            // Options Type Tabs
-            const optionsTypeTabs = document.querySelectorAll('.options-type-tab');
-            const optionsContents = document.querySelectorAll('.options-content');
-            
-            optionsTypeTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    optionsTypeTabs.forEach(t => t.classList.remove('active'));
-                    optionsContents.forEach(content => content.classList.add('hidden'));
-                    
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.type + 'Options').classList.remove('hidden');
-                });
-            });
-            
-            // Search Functionality
-            const searchInput = document.getElementById('searchInput');
-            const searchResults = document.getElementById('searchResults');
-            
-            searchInput.addEventListener('input', _.debounce(function() {
-                const query = searchInput.value.trim();
-                if (query.length < 2) {
-                    searchResults.classList.add('hidden');
-                    return;
-                }
-                
-                searchStocks(query);
-            }, 300));
-            
-            // Hide search results when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
-                    searchResults.classList.add('hidden');
-                }
-            });
-            
-            // Options Symbol Input
-            const optionsSymbolInput = document.getElementById('optionsSymbol');
-            const loadOptionsButton = document.getElementById('loadOptions');
-            
-            optionsSymbolInput.addEventListener('change', function() {
-                const symbol = optionsSymbolInput.value.trim().toUpperCase();
-                if (symbol) {
-                    fetchOptionExpirationDates(symbol);
-                }
-            });
-            
-            loadOptionsButton.addEventListener('click', function() {
-                const symbol = optionsSymbolInput.value.trim().toUpperCase();
-                const expirationDate = document.getElementById('expirationDate').value;
-                
-                if (symbol && expirationDate) {
-                    loadOptionChain(symbol, expirationDate);
-                } else {
-                    alert('Please select both a symbol and expiration date');
-                }
-            });
-            
-            // Strategy Builder
-            const suggestStrategiesButton = document.getElementById('suggestStrategies');
-            
-            suggestStrategiesButton.addEventListener('click', function() {
-                const direction = document.getElementById('marketDirection').value;
-                const risk = document.getElementById('riskTolerance').value;
-                const budget = document.getElementById('optionsBudget').value;
-                
-                if (!budget) {
-                    alert('Please enter a budget amount');
-                    return;
-                }
-                
-                suggestOptionsStrategies(direction, risk, parseFloat(budget));
-            });
-            
-            // Initialize with default data
-            fetchStockData(currentStock, '1M');
-            fetchStockDetails(currentStock);
-            fetchStockNews(currentStock);
-            fetchIndexData(currentIndex, '1M');
-            loadPopularIndices();
-            loadEconomicCalendar();
-            loadMarketNews();
-        });
-        
-        // Search for stocks
-        function searchStocks(query) {
-            const endpoint = `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(query)}&active=true&limit=10&sort=ticker&apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        const resultsHTML = data.results
-                            .filter(result => result.market === 'stocks')
-                            .map(result => `
-                                <div class="p-3 hover:bg-gray-700 cursor-pointer search-result" data-symbol="${result.ticker}" data-name="${result.name}">
-                                    <div class="font-bold">${result.ticker}</div>
-                                    <div class="text-sm text-gray-400">${result.name}</div>
-                                </div>
-                            `).join('');
-                        
-                        searchResults.innerHTML = resultsHTML;
-                        searchResults.classList.remove('hidden');
-                        
-                        // Add click event to search results
-                        document.querySelectorAll('.search-result').forEach(result => {
-                            result.addEventListener('click', function() {
-                                const symbol = this.dataset.symbol;
-                                const name = this.dataset.name;
-                                
-                                currentStock = symbol;
-                                document.getElementById('stockSymbol').textContent = symbol;
-                                document.getElementById('stockName').textContent = name;
-                                document.getElementById('searchInput').value = symbol;
-                                
-                                fetchStockData(symbol, '1M');
-                                fetchStockDetails(symbol);
-                                fetchStockNews(symbol);
-                                
-                                searchResults.classList.add('hidden');
-                            });
-                        });
-                    } else {
-                        searchResults.innerHTML = '<div class="p-3 text-gray-400">No results found</div>';
-                        searchResults.classList.remove('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error searching for stocks:', error);
-                    searchResults.innerHTML = '<div class="p-3 text-gray-400">Error searching for stocks</div>';
-                    searchResults.classList.remove('hidden');
-                });
-        }
-        
-        // Fetch stock data for chart
-        function fetchStockData(symbol, interval) {
-            let multiplier = 1;
-            let timespan = 'day';
-            let from, to;
-            
-            const now = new Date();
-            to = formatDate(now);
-            
-            switch (interval) {
-                case '1D':
-                    multiplier = 5;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 1)));
-                    break;
-                case '1W':
-                    multiplier = 30;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 7)));
-                    break;
-                case '1M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-                    break;
-                case '3M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 3)));
-                    break;
-                case '1Y':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setFullYear(now.getFullYear() - 1)));
-                    break;
-                case 'YTD':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = `${now.getFullYear()}-01-01`;
-                    break;
-                default:
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-            }
-            
-            const endpoint = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/${multiplier}/${timespan}/${from}/${to}?adjusted=true&sort=asc&apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        renderStockChart(data.results, interval);
-                        updateLatestPrice(data.results[data.results.length - 1], data.results[data.results.length - 2]);
-                        analyseTechnicals(data.results);
-                        makePrediction(data.results);
-                    } else {
-                        console.error('No stock data available');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching stock data:', error);
-                });
-        }
-        
-        // Render stock chart
-        function renderStockChart(data, interval) {
-            const ctx = document.getElementById('stockChart').getContext('2d');
-            
-            if (stockChart) {
-                stockChart.destroy();
-            }
-            
-            // Prepare data for Chart.js
-            const chartData = {
-                labels: data.map(item => new Date(item.t)),
-                datasets: [{
-                    label: currentStock,
-                    data: data.map(item => item.c),
-                    borderColor: '#00C805',
-                    backgroundColor: 'rgba(0, 200, 5, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#00C805',
-                    pointHoverBorderColor: '#FFFFFF',
-                    fill: true,
-                    tension: 0.1
-                }]
-            };
-            
-            // Chart configuration
-            const config = {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(30, 33, 36, 0.9)',
-                            titleColor: '#FFFFFF',
-                            bodyColor: '#FFFFFF',
-                            borderColor: 'rgba(54, 58, 69, 0.9)',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    if (interval === '1D') {
-                                        return moment(tooltipItems[0].raw).format('h:mm A');
-                                    } else {
-                                        return moment(tooltipItems[0].raw).format('MMM D, YYYY');
-                                    }
-                                },
-                                label: function(context) {
-                                    return `${context.raw.toFixed(2)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: interval === '1D' || interval === '1W' ? 'hour' : 'day',
-                                displayFormats: {
-                                    hour: 'h:mm A',
-                                    day: 'MMM D'
-                                }
-                            },
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#8A8A8A',
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: 6
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(54, 58, 69, 0.5)'
-                            },
-                            ticks: {
-                                color: '#8A8A8A',
-                                callback: function(value) {
-                                    return ' + value.toFixed(2);
+                                <div id=" + value.toFixed(2);
                                 }
                             }
                         }
@@ -1158,7 +1169,295 @@
             }
             
             // Random price target (10-30% above current price)
-            const currentPrice = parseFloat(document.getElementById('stockPrice').textContent.replace(', ''));
+            const currentPrice = parseFloat(document.getElementById('stockPrice').textContent.replace('trendLines"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
+                                <div id="technicalAnalysis">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
+                                <div id="stockPrediction">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Open</p>
+                                    <p id="stockOpen" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">High</p>
+                                    <p id="stockHigh" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Low</p>
+                                    <p id="stockLow" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Prev Close</p>
+                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Volume</p>
+                                    <p id="stockVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Avg Volume</p>
+                                    <p id="stockAvgVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Market Cap</p>
+                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
+                                    <p id="stockPE" class="font-bold">0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - News and Sentiment -->
+                    <div class="w-full lg:w-4/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold">Market Sentiment</h3>
+                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-red-500">Sell</span>
+                                    <span class="text-yellow-500">Hold</span>
+                                    <span class="text-green-500">Buy</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Price Target:</span>
+                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Upside:</span>
+                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
+                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
+                            <div id="newsContainer">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Tab Content -->
+            <div id="options" class="tab-content">
+                <div class="robinhood-card p-6 mb-6">
+                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
+                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
+                            <select id="expirationDate" class="custom-select w-full md:w-48">
+                                <option value="">Select date</option>
+                            </select>
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
+                                Load Options
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="optionsSymbolInfo" class="mb-6 hidden">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
+                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
+                            </div>
+                            <div class="text-right">
+                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
+                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex mb-4 border-b border-gray-700">
+                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
+                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
+                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
+                    </div>
+                    
+                    <div id="suggestedOptions" class="options-content">
+                        <div class="text-center py-4" id="suggestedOptionsLoader">
+                            <div class="loading-spinner"></div>
+                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
+                        </div>
+                        <div id="suggestedOptionsContent" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
+                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
+                                </div>
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
+                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
+                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- Recommendations will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="callOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="callOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="putOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="putOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="robinhood-card p-6">
+                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
+                                <select id="marketDirection" class="custom-select w-full">
+                                    <option value="bullish">Bullish</option>
+                                    <option value="bearish">Bearish</option>
+                                    <option value="neutral">Neutral</option>
+                                    <option value="volatile">Volatile</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
+                                <select id="riskTolerance" class="custom-select w-full">
+                                    <option value="conservative">Conservative</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="aggressive">Aggressive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
+                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
+                            </div>
+                        </div>
+                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
+                    </div>
+                    <div id="strategySuggestions" class="hidden">
+                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
+                        <div id="strategyList" class="space-y-4">
+                            <!-- Strategy recommendations will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indices Tab Content -->
+            <div id="indices" class="tab-content">
+                <div class="flex flex-wrap -mx-4">
+                    <!-- Left Column - Index Chart and Analysis -->
+                    <div class="w-full lg:w-8/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
+                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
+                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
+                                </div>
+                            </div>
+                            <div class="mb-4 flex space-x-4">
+                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
+                                <button class="tab-button index-interval" data-interval="1W">1W</button>
+                                <button class="tab-button index-interval" data-interval="1M">1M</button>
+                                <button class="tab-button index-interval" data-interval="3M">3M</button>
+                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
+                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
+                            </div>
+                            <div>
+                                <canvas id="indexChart" height="300"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
+                                <div id=", ''));
             const upside = 10 + Math.random() * 20;
             const priceTarget = currentPrice * (1 + upside / 100);
             
@@ -1363,626 +1662,292 @@
                 <div class="mb-4">
                     <span class="text-xl font-bold ${overallSignal.class}">${overallSignal.text}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    <div>
-                        <p class="text-gray-400 text-sm">RSI (14)</p>
-                        <p class="font-bold ${rsi > 70 ? 'negative' : (rsi < 30 ? 'positive' : '')}">${rsi.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">MACD</p>
-                        <p class="font-bold ${macd.line > macd.signal ? 'positive' : 'negative'}">${macd.line.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">SMA (20)</p>
-                        <p class="font-bold ${currentPrice > sma20 ? 'positive' : 'negative'}">${sma20.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">SMA (50)</p>
-                        <p class="font-bold ${currentPrice > sma50 ? 'positive' : 'negative'}">${sma50.toFixed(2)}</p>
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <p class="text-sm font-bold mb-2">Technical Signals:</p>
-                    ${signals.slice(0, 5).map(signal => `
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm">${signal.name}</span>
-                            <span class="text-sm ${signal.signal === 'bullish' || signal.signal === 'oversold' ? 'positive' : (signal.signal === 'bearish' || signal.signal === 'overbought' ? 'negative' : '')}">${signal.signal.charAt(0).toUpperCase() + signal.signal.slice(1)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-        
-        // Make price prediction
-        function makePrediction(data) {
-            const container = document.getElementById('stockPrediction');
-            
-            // Extract closing prices
-            const prices = data.map(item => item.c);
-            const dates = data.map(item => new Date(item.t));
-            
-            // Current price
-            const currentPrice = prices[prices.length - 1];
-            
-            // Simple moving average for prediction
-            const sma20 = calculateSMA(prices, 20);
-            const sma50 = calculateSMA(prices, 50);
-            
-            // Momentum (rate of change)
-            const momentum = (prices[prices.length - 1] / prices[prices.length - 20] - 1) * 100;
-            
-            // Calculate standard deviation (volatility)
-            const stdDev = calculateStdDev(prices);
-            
-            // Simple linear regression for trend prediction
-            const regression = calculateLinearRegression(dates.map(d => d.getTime()), prices);
-            
-            // Predict prices for next 30 days
-            const lastDate = dates[dates.length - 1];
-            const predictions = [];
-            
-            for (let i = 1; i <= 30; i++) {
-                const nextDate = new Date(lastDate);
-                nextDate.setDate(nextDate.getDate() + i);
-                
-                // Simple prediction model combining regression and momentum
-                const regressionPrediction = regression.slope * nextDate.getTime() + regression.intercept;
-                const momentumFactor = 1 + (momentum / 100) * (i / 30);
-                
-                const predictedPrice = currentPrice * (0.7 * momentumFactor + 0.3 * (regressionPrediction / currentPrice));
-                
-                // Add some randomness (simulating market volatility)
-                const randomFactor = 1 + ((Math.random() - 0.5) * stdDev * 0.02 * i);
-                const finalPrediction = predictedPrice * randomFactor;
-                
-                predictions.push({
-                    date: nextDate,
-                    price: finalPrediction
-                });
-            }
-            
-            // Price targets
-            const shortTarget = predictions[6].price;
-            const mediumTarget = predictions[14].price;
-            const longTarget = predictions[29].price;
-            
-            // Determine overall direction
-            const shortChange = ((shortTarget / currentPrice) - 1) * 100;
-            const mediumChange = ((mediumTarget / currentPrice) - 1) * 100;
-            const longChange = ((longTarget / currentPrice) - 1) * 100;
-            
-            let recommendation;
-            if (shortChange > 5 && mediumChange > 10) {
-                recommendation = { text: 'Strong Buy', class: 'positive' };
-            } else if (shortChange > 2 && mediumChange > 5) {
-                recommendation = { text: 'Buy', class: 'positive' };
-            } else if (shortChange < -5 && mediumChange < -10) {
-                recommendation = { text: 'Strong Sell', class: 'negative' };
-            } else if (shortChange < -2 && mediumChange < -5) {
-                recommendation = { text: 'Sell', class: 'negative' };
-            } else {
-                recommendation = { text: 'Hold', class: '' };
-            }
-            
-            // Render prediction
-            container.innerHTML = `
-                <div class="mb-4">
-                    <span class="text-xl font-bold ${recommendation.class}">${recommendation.text}</span>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-gray-400 text-sm">7-Day Forecast</p>
-                        <div class="flex items-end space-x-1">
-                            <span class="text-xl font-bold">${shortTarget.toFixed(2)}</span>
-                            <span class="text-sm ${shortChange >= 0 ? 'positive' : 'negative'}">${shortChange >= 0 ? '+' : ''}${shortChange.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">15-Day Forecast</p>
-                        <div class="flex items-end space-x-1">
-                            <span class="text-xl font-bold">${mediumTarget.toFixed(2)}</span>
-                            <span class="text-sm ${mediumChange >= 0 ? 'positive' : 'negative'}">${mediumChange >= 0 ? '+' : ''}${mediumChange.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">30-Day Forecast</p>
-                        <div class="flex items-end space-x-1">
-                            <span class="text-xl font-bold">${longTarget.toFixed(2)}</span>
-                            <span class="text-sm ${longChange >= 0 ? 'positive' : 'negative'}">${longChange >= 0 ? '+' : ''}${longChange.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Find trend lines
-        function findTrendLines(data) {
-            const container = document.getElementById('trendLines');
-            container.innerHTML = ''; // Clear previous trend lines
-            
-            // Only proceed if we have enough data points
-            if (data.length < 10) return;
-            
-            // Extract high and low prices
-            const highPrices = data.map(item => item.h || item.c);
-            const lowPrices = data.map(item => item.l || item.c);
-            
-            // Find resistance level (simplified approach using recent highs)
-            const recentHighs = highPrices.slice(-20);
-            const maxHigh = Math.max(...recentHighs);
-            const highThreshold = maxHigh * 0.98;
-            const significantHighs = recentHighs.filter(p => p > highThreshold);
-            
-            // Resistance line
-            if (significantHighs.length >= 2) {
-                const resistanceLevel = significantHighs.reduce((sum, p) => sum + p, 0) / significantHighs.length;
-                const lineElement = document.createElement('div');
-                lineElement.classList.add('resistance-line');
-                lineElement.style.top = `${stockChart.scales.y.getPixelForValue(resistanceLevel)}px`;
-                lineElement.style.width = '100%';
-                lineElement.title = `Resistance: ${resistanceLevel.toFixed(2)}`;
-                container.appendChild(lineElement);
-            }
-            
-            // Find support level (simplified approach using recent lows)
-            const recentLows = lowPrices.slice(-20);
-            const minLow = Math.min(...recentLows);
-            const lowThreshold = minLow * 1.02;
-            const significantLows = recentLows.filter(p => p < lowThreshold);
-            
-            // Support line
-            if (significantLows.length >= 2) {
-                const supportLevel = significantLows.reduce((sum, p) => sum + p, 0) / significantLows.length;
-                const lineElement = document.createElement('div');
-                lineElement.classList.add('support-line');
-                lineElement.style.top = `${stockChart.scales.y.getPixelForValue(supportLevel)}px`;
-                lineElement.style.width = '100%';
-                lineElement.title = `Support: ${supportLevel.toFixed(2)}`;
-                container.appendChild(lineElement);
-            }
-            
-            // Simple trend line (linear regression)
-            const prices = data.map(item => item.c);
-            const timestamps = data.map((item, index) => index);
-            
-            const regression = calculateLinearRegression(timestamps, prices);
-            
-            // Only show trend line if it's significant
-            if (Math.abs(regression.slope) > 0.01) {
-                const startY = regression.slope * 0 + regression.intercept;
-                const endY = regression.slope * (timestamps.length - 1) + regression.intercept;
-                
-                const startPixel = stockChart.scales.y.getPixelForValue(startY);
-                const endPixel = stockChart.scales.y.getPixelForValue(endY);
-                
-                const angle = Math.atan2(startPixel - endPixel, timestamps.length - 1) * (180 / Math.PI);
-                
-                const lineElement = document.createElement('div');
-                lineElement.classList.add('trend-line');
-                lineElement.style.top = `${endPixel}px`;
-                lineElement.style.left = '0';
-                lineElement.style.width = '100%';
-                lineElement.style.transform = `rotate(${angle}deg)`;
-                lineElement.style.transformOrigin = '0 0';
-                
-                if (regression.slope > 0) {
-                    lineElement.title = 'Uptrend';
-                    lineElement.style.backgroundColor = 'rgba(0, 200, 5, 0.7)';
-                } else {
-                    lineElement.title = 'Downtrend';
-                    lineElement.style.backgroundColor = 'rgba(255, 80, 0, 0.7)';
-                }
-                
-                container.appendChild(lineElement);
-            }
-        }
-        
-        // Fetch index data
-        function fetchIndexData(symbol, interval) {
-            let multiplier = 1;
-            let timespan = 'day';
-            let from, to;
-            
-            const now = new Date();
-            to = formatDate(now);
-            
-            switch (interval) {
-                case '1D':
-                    multiplier = 5;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 1)));
-                    break;
-                case '1W':
-                    multiplier = 30;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 7)));
-                    break;
-                case '1M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-                    break;
-                case '3M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 3)));
-                    break;
-                case '1Y':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setFullYear(now.getFullYear() - 1)));
-                    break;
-                case 'YTD':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = `${now.getFullYear()}-01-01`;
-                    break;
-                default:
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-            }
-            
-            const endpoint = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/${multiplier}/${timespan}/${from}/${to}?adjusted=true&sort=asc&apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        renderIndexChart(data.results, interval);
-                        updateIndexValue(data.results[data.results.length - 1], data.results[data.results.length - 2]);
-                        analyzeIndex(data.results);
-                        predictIndex(data.results);
-                    } else {
-                        console.error('No index data available');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching index data:', error);
-                });
-        }
-        
-        // Render index chart
-        function renderIndexChart(data, interval) {
-            const ctx = document.getElementById('indexChart').getContext('2d');
-            
-            if (indexChart) {
-                indexChart.destroy();
-            }
-            
-            // Prepare data for Chart.js
-            const chartData = {
-                labels: data.map(item => new Date(item.t)),
-                datasets: [{
-                    label: currentIndex.replace('I:', ''),
-                    data: data.map(item => item.c),
-                    borderColor: '#1E90FF',
-                    backgroundColor: 'rgba(30, 144, 255, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#1E90FF',
-                    pointHoverBorderColor: '#FFFFFF',
-                    fill: true,
-                    tension: 0.1
-                }]
-            };
-            
-            // Chart configuration
-            const config = {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(30, 33, 36, 0.9)',
-                            titleColor: '#FFFFFF',
-                            bodyColor: '#FFFFFF',
-                            borderColor: 'rgba(54, 58, 69, 0.9)',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    if (interval === '1D') {
-                                        return moment(tooltipItems[0].raw).format('h:mm A');
-                                    } else {
-                                        return moment(tooltipItems[0].raw).format('MMM D, YYYY');
-                                    }
-                                },
-                                label: function(context) {
-                                    return context.raw.toFixed(2);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: interval === '1D' || interval === '1W' ? 'hour' : 'day',
-                                displayFormats: {
-                                    hour: 'h:mm A',
-                                    day: 'MMM D'
-                                }
-                            },
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#8A8A8A',
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: 6
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(54, 58, 69, 0.5)'
-                            },
-                            ticks: {
-                                color: '#8A8A8A'
-                            }
-                        }
-                    }
-                }
-            };
-            
-            indexChart = new Chart(ctx, config);
-        }
-        
-        // Update index value
-        function updateIndexValue(latestData, previousData) {
-            const value = latestData.c;
-            const previousValue = previousData ? previousData.c : 0;
-            const change = value - previousValue;
-            const changePercent = (change / previousValue) * 100;
-            
-            document.getElementById('indexValue').textContent = value.toFixed(2);
-            document.getElementById('indexChange').textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
-            document.getElementById('indexChange').className = change >= 0 ? 'text-sm positive' : 'text-sm negative';
-            
-            // Set index name based on symbol
-            let indexName = 'Index';
-            switch (currentIndex) {
-                case 'I:SPX':
-                    indexName = 'S&P 500 Index';
-                    break;
-                case 'I:DJI':
-                    indexName = 'Dow Jones Industrial Average';
-                    break;
-                case 'I:NDX':
-                    indexName = 'Nasdaq 100 Index';
-                    break;
-                case 'I:RUT':
-                    indexName = 'Russell 2000 Index';
-                    break;
-                case 'I:VIX':
-                    indexName = 'CBOE Volatility Index';
-                    break;
-            }
-            document.getElementById('indexName').textContent = indexName;
-        }
-        
-        // Analyze index
-        function analyzeIndex(data) {
-            const container = document.getElementById('indexAnalysis');
-            
-            // Calculate indicators
-            const values = data.map(item => item.c);
-            const sma50 = calculateSMA(values, 50);
-            const sma200 = calculateSMA(values, 200);
-            const currentValue = values[values.length - 1];
-            
-            // Calculate percentile in 52-week range
-            const sortedValues = [...values].sort((a, b) => a - b);
-            const min52Week = sortedValues[0];
-            const max52Week = sortedValues[sortedValues.length - 1];
-            const range52Week = max52Week - min52Week;
-            const percentile = Math.round(((currentValue - min52Week) / range52Week) * 100);
-            
-            // Trend analysis
-            const shortTerm = (values[values.length - 1] / values[values.length - 10] - 1) * 100;
-            const mediumTerm = (values[values.length - 1] / values[values.length - 30] - 1) * 100;
-            const longTerm = (values[values.length - 1] / values[values.length - 90] - 1) * 100;
-            
-            let marketPhase = 'Neutral';
-            let marketTrend = 'Neutral';
-            
-            if (shortTerm > 5 && mediumTerm > 10) {
-                marketPhase = 'Bull Market';
-                marketTrend = 'Strong Uptrend';
-            } else if (shortTerm > 2 && mediumTerm > 5) {
-                marketPhase = 'Bull Market';
-                marketTrend = 'Uptrend';
-            } else if (shortTerm < -5 && mediumTerm < -10) {
-                marketPhase = 'Bear Market';
-                marketTrend = 'Strong Downtrend';
-            } else if (shortTerm < -2 && mediumTerm < -5) {
-                marketPhase = 'Bear Market';
-                marketTrend = 'Downtrend';
-            } else if (Math.abs(shortTerm) < 2 && Math.abs(mediumTerm) < 5) {
-                marketPhase = 'Consolidation';
-                marketTrend = 'Sideways';
-            }
-            
-            // Market breadth (simplified)
-            const breadth = Math.random(); // Simulate market breadth (0-1)
-            let breadthText = '';
-            if (breadth > 0.7) {
-                breadthText = 'Strong (Most stocks participating in market movement)';
-            } else if (breadth > 0.4) {
-                breadthText = 'Moderate (Average participation)';
-            } else {
-                breadthText = 'Weak (Few stocks driving market movement)';
-            }
-            
-            // Render analysis
-            container.innerHTML = `
-                <div class="mb-4">
-                    <span class="text-xl font-bold ${marketPhase === 'Bull Market' ? 'positive' : (marketPhase === 'Bear Market' ? 'negative' : '')}">${marketPhase}</span>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-gray-400 text-sm">Overall Trend</p>
-                        <p class="font-bold ${marketTrend.includes('Uptrend') ? 'positive' : (marketTrend.includes('Downtrend') ? 'negative' : '')}">${marketTrend}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">52-Week Range Position</p>
-                        <div class="w-full bg-gray-700 rounded-full h-2.5 mt-1 mb-1">
-                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: ${percentile}%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs">
-                            <span>52-Week Low</span>
-                            <span>${percentile}%</span>
-                            <span>52-Week High</span>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Market Breadth</p>
-                        <p class="font-bold">${breadthText}</p>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <p class="text-gray-400 text-sm">1 Week</p>
-                            <p class="font-bold ${shortTerm >= 0 ? 'positive' : 'negative'}">${shortTerm.toFixed(2)}%</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-400 text-sm">1 Month</p>
-                            <p class="font-bold ${mediumTerm >= 0 ? 'positive' : 'negative'}">${mediumTerm.toFixed(2)}%</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-400 text-sm">3 Months</p>
-                            <p class="font-bold ${longTerm >= 0 ? 'positive' : 'negative'}">${longTerm.toFixed(2)}%</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Predict index
-        function predictIndex(data) {
-            const container = document.getElementById('indexPrediction');
-            
-            // Extract closing values
-            const values = data.map(item => item.c);
-            const currentValue = values[values.length - 1];
-            
-            // Simple prediction based on recent trends
-            const shortTerm = (values[values.length - 1] / values[values.length - 10] - 1) * 100;
-            const mediumTerm = (values[values.length - 1] / values[values.length - 30] - 1) * 100;
-            
-            // Use simple linear regression for prediction
-            const timestamps = data.map((item, index) => index);
-            const regression = calculateLinearRegression(timestamps, values);
-            
-            // Calculate volatility
-            const volatility = calculateStdDev(values) / currentValue * 100;
-            
-            // Generate scenarios
-            const bearishCase = currentValue * (1 - Math.abs(mediumTerm / 100) - volatility / 100);
-            const baseCase = currentValue * (1 + regression.slope * 30);
-            const bullishCase = currentValue * (1 + Math.abs(mediumTerm / 100) + volatility / 100);
-            
-            // Determine confidence level based on volatility
-            let confidence = 'High';
-            if (volatility > 15) {
-                confidence = 'Low';
-            } else if (volatility > 8) {
-                confidence = 'Medium';
-            }
-            
-            // Overall direction
-            let direction = 'Neutral';
-            let directionClass = '';
-            
-            if (baseCase > currentValue * 1.05) {
-                direction = 'Bullish';
-                directionClass = 'positive';
-            } else if (baseCase < currentValue * 0.95) {
-                direction = 'Bearish';
-                directionClass = 'negative';
-            }
-            
-            // Key levels
-            const support = currentValue * 0.95;
-            const resistance = currentValue * 1.05;
-            
-            // Render prediction
-            container.innerHTML = `
-                <div class="mb-4">
-                    <span class="text-xl font-bold ${directionClass}">${direction}</span>
-                    <span class="text-sm ml-2 text-gray-400">(${confidence} Confidence)</span>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-gray-400 text-sm">30-Day Outlook</p>
-                        <div class="grid grid-cols-3 gap-2 mt-2">
-                            <div>
-                                <p class="text-xs text-gray-400">Bearish</p>
-                                <p class="font-bold negative">${bearishCase.toFixed(2)}</p>
-                                <p class="text-xs negative">${((bearishCase / currentValue - 1) * 100).toFixed(2)}%</p>
+                <div class="grid grid-cols-2 gap-trendLines"></div>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400">Base Case</p>
-                                <p class="font-bold">${baseCase.toFixed(2)}</p>
-                                <p class="text-xs ${baseCase >= currentValue ? 'positive' : 'negative'}">${((baseCase / currentValue - 1) * 100).toFixed(2)}%</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
+                                <div id="technicalAnalysis">
+                                    <div class="loading-spinner"></div>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400">Bullish</p>
-                                <p class="font-bold positive">${bullishCase.toFixed(2)}</p>
-                                <p class="text-xs positive">${((bullishCase / currentValue - 1) * 100).toFixed(2)}%</p>
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
+                                <div id="stockPrediction">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Open</p>
+                                    <p id="stockOpen" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">High</p>
+                                    <p id="stockHigh" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Low</p>
+                                    <p id="stockLow" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Prev Close</p>
+                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Volume</p>
+                                    <p id="stockVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Avg Volume</p>
+                                    <p id="stockAvgVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Market Cap</p>
+                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
+                                    <p id="stockPE" class="font-bold">0.00</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Key Levels</p>
-                        <div class="grid grid-cols-2 gap-2 mt-2">
-                            <div>
-                                <p class="text-xs text-gray-400">Support</p>
-                                <p class="font-bold">${support.toFixed(2)}</p>
+
+                    <!-- Right Column - News and Sentiment -->
+                    <div class="w-full lg:w-4/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold">Market Sentiment</h3>
+                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-red-500">Sell</span>
+                                    <span class="text-yellow-500">Hold</span>
+                                    <span class="text-green-500">Buy</span>
+                                </div>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-400">Resistance</p>
-                                <p class="font-bold">${resistance.toFixed(2)}</p>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Price Target:</span>
+                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Upside:</span>
+                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
+                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
+                            <div id="newsContainer">
+                                <div class="loading-spinner"></div>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">Potential Market Catalysts</p>
-                        <ul class="text-sm mt-1 list-disc pl-5 space-y-1">
-                            <li>Economic data releases</li>
-                            <li>Federal Reserve policy decisions</li>
-                            <li>Earnings season impact</li>
-                        </ul>
+                </div>
+            </div>
+
+            <!-- Options Tab Content -->
+            <div id="options" class="tab-content">
+                <div class="robinhood-card p-6 mb-6">
+                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
+                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
+                            <select id="expirationDate" class="custom-select w-full md:w-48">
+                                <option value="">Select date</option>
+                            </select>
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
+                                Load Options
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="optionsSymbolInfo" class="mb-6 hidden">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
+                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
+                            </div>
+                            <div class="text-right">
+                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
+                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex mb-4 border-b border-gray-700">
+                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
+                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
+                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
+                    </div>
+                    
+                    <div id="suggestedOptions" class="options-content">
+                        <div class="text-center py-4" id="suggestedOptionsLoader">
+                            <div class="loading-spinner"></div>
+                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
+                        </div>
+                        <div id="suggestedOptionsContent" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
+                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
+                                </div>
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
+                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
+                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- Recommendations will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="callOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="callOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="putOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="putOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            `;
-        }
-        
-        // Load sector performance
-        function loadSectorPerformance() {
-            const container = document.getElementById('sectorPerformance');
-            
-            // Mock sector data
-            const sectors = [
-                { name: 'Technology', day: 0.7, week: 2.3, month: 4.1, ytd: 15.2 },
-                { name: 'Healthcare', day: -0.3, week: 1.5, month: -1.2, ytd: 9.7 },
-                { name: 'Financials', day: 0.5, week: -0.8, month: 2.3, ytd: 11.3 },
-                { name: 'Consumer Discretionary', day: 0.2, week: 1.1, month: 3.2, ytd: 8.5 },
-                { name: 'Communication Services', day: -0.5, week: -1.2, month: 0.9, ytd: 12.8 },
-                { name: 'Industrials', day: 0.4, week: 0.9, month: 2.7, ytd: 7.2 },
-                { name: 'Energy', day: 1.2, week: 3.1, month: 5.6, ytd: 18.9 },
-                { name: 'Utilities', day: -0.1, week: -0.5, month: -2.1, ytd: -3.2 },
-                { name: 'Materials', day: 0.9, week: 1.7, month: 2.9, ytd: 6.7 },
+                
+                <div class="robinhood-card p-6">
+                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
+                                <select id="marketDirection" class="custom-select w-full">
+                                    <option value="bullish">Bullish</option>
+                                    <option value="bearish">Bearish</option>
+                                    <option value="neutral">Neutral</option>
+                                    <option value="volatile">Volatile</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
+                                <select id="riskTolerance" class="custom-select w-full">
+                                    <option value="conservative">Conservative</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="aggressive">Aggressive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
+                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
+                            </div>
+                        </div>
+                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
+                    </div>
+                    <div id="strategySuggestions" class="hidden">
+                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
+                        <div id="strategyList" class="space-y-4">
+                            <!-- Strategy recommendations will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indices Tab Content -->
+            <div id="indices" class="tab-content">
+                <div class="flex flex-wrap -mx-4">
+                    <!-- Left Column - Index Chart and Analysis -->
+                    <div class="w-full lg:w-8/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
+                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
+                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
+                                </div>
+                            </div>
+                            <div class="mb-4 flex space-x-4">
+                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
+                                <button class="tab-button index-interval" data-interval="1W">1W</button>
+                                <button class="tab-button index-interval" data-interval="1M">1M</button>
+                                <button class="tab-button index-interval" data-interval="3M">3M</button>
+                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
+                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
+                            </div>
+                            <div>
+                                <canvas id="indexChart" height="300"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
+                                <div id="
