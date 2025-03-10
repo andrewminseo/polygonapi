@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketInsight Pro - Stock Analysis & Predictions</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f8fa;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            font-weight: 600;
+        }
+        
+        .ticker-search {
+            position: relative;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .search-results div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-results div:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .chart-container {
+            height: 400px;
+            width: 100%;
+        }
+        
+        .news-card {
+            height: 600px;
+            overflow-y: auto;
+        }
+        
+        .prediction-card {
+            height: 250px;
+        }
+        
+        .news-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        
+        .news-item h5 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .news-item .news-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .news-item .sentiment {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .sentiment-positive {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+        
+        .sentiment-negative {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+        
+        .sentiment-neutral {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+        
+        .option-item {
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .option-item:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        .option-call {
+            border-left: 4px solid #28a745;
+        }
+        
+        .option-put {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .data-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .data-positive {
+            background-color: #28a745;
+        }
+        
+        .data-negative {
+            background-color: #dc3545;
+        }
+        
+        .data-neutral {
+            background-color: #6c757d;
+        }
+        
+        .trend-indicator {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+        
+        .trend-up {
+            color: #28a745;
+        }
+        
+        .trend-down {
+            color: #dc3545;
+        }
+        
+        .trend-neutral {
+            color: #6c757d;
+        }
+        
+        .index-card {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .index-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .index-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        #indexAnalysisTrendlines {
+            height: 400px;
+        }
+        
+        .table-fixed {
+            table-layout: fixed;
+        }
+        
+        .table-fixed td, .table-fixed th {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        #stockTicker {
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>MarketInsight Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="stocksTab" data-bs-toggle="tab" data-bs-target="#stocks">Stocks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="optionsTab" data-bs-toggle="tab" data-bs-target="#options">Options</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="indicesTab" data-bs-toggle="tab" data-bs-target="#indices">Indices</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="tab-content">
+            <!-- Stocks Tab -->
+            <div class="tab-pane fade show active" id="stocks">
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-search me-2"></i>Stock Search
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label for="stockTicker" class="form-label">Enter Stock Ticker</label>
+                                        <div class="ticker-search">
+                                            <input type="text" class="form-control" id="stockTicker" placeholder="e.g., AAPL">
+                                            <div class="search-results" id="searchResults"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="timeRange" class="form-label">Time Range</label>
+                                        <select class="form-select" id="timeRange">
+                                            <option value="1D">1 Day</option>
+                                            <option value="1W">1 Week</option>
+                                            <option value="1M" selected>1 Month</option>
+                                            <option value="3M">3 Months</option>
+                                            <option value="6M">6 Months</option>
+                                            <option value="1Y">1 Year</option>
+                                            <option value="YTD">Year to Date</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button id="searchStockBtn" class="btn btn-primary mt-2">
+                                            <i class="fas fa-chart-line me-2"></i>Analyze Stock
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card prediction-card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-chart-pie me-2"></i>Stock Summary
+                            </div>
+                            <div class="card-body" id="stockSummary">
+                                <div class="text-center">
+                                    <p class="text-muted">Enter a stock ticker to see summary information</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-chart-area me-2"></i>Stock Chart & Trendlines
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" id="stockChart">
+                                    <div class="text-center py-5">
+                                        <p class="text-muted">Enter a stock ticker to view chart</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-robot me-2"></i>Stock Analysis & Predictions
+                            </div>
+                            <div class="card-body" id="stockAnalysis">
+                                <div class="text-center">
+                                    <p class="text-muted">Enter a stock ticker to see analysis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card news-card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-newspaper me-2"></i>News & Sentiment Analysis
+                            </div>
+                            <div class="card-body p-0" id="newsContainer">
+                                <div class="text-center py-5">
+                                    <p class="text-muted">Enter a stock ticker to see related news</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Tab -->
+            <div class="tab-pane fade" id="options">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-search me-2"></i>Options Lookup
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="optionsStockTicker" class="form-label">Underlying Stock</label>
+                                        <input type="text" class="form-control" id="optionsStockTicker" placeholder="e.g., AAPL">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="expirationDate" class="form-label">Expiration Date</label>
+                                        <select class="form-select" id="expirationDate">
+                                            <option value="">Select expiration date</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button id="searchOptionsBtn" class="btn btn-primary mt-2">
+                                            <i class="fas fa-search me-2"></i>Find Options
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-lightbulb me-2"></i>Options Strategy Suggestions
+                            </div>
+                            <div class="card-body" id="optionsStrategies">
+                                <div class="text-center">
+                                    <p class="text-muted">Enter a stock ticker to see options strategies</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-table me-2"></i>Options Chain
+                            </div>
+                            <div class="card-body">
+                                <ul class="nav nav-tabs" id="optionTypeTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="calls-tab" data-bs-toggle="tab" data-bs-target="#calls" type="button" role="tab" aria-controls="calls" aria-selected="true">Calls</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="puts-tab" data-bs-toggle="tab" data-bs-target="#puts" type="button" role="tab" aria-controls="puts" aria-selected="false">Puts</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content mt-3" id="optionTypeTabContent">
+                                    <div class="tab-pane fade show active" id="calls" role="tabpanel" aria-labelledby="calls-tab">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover table-fixed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Strike</th>
+                                                        <th>Last Price</th>
+                                                        <th>Bid</th>
+                                                        <th>Ask</th>
+                                                        <th>Volume</th>
+                                                        <th>Open Interest</th>
+                                                        <th>Implied Vol</th>
+                                                        <th>Analysis</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="callsTableBody">
+                                                    <tr>
+                                                        <td colspan="8" class="text-center">Enter a stock ticker to see options data</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="puts" role="tabpanel" aria-labelledby="puts-tab">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover table-fixed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Strike</th>
+                                                        <th>Last Price</th>
+                                                        <th>Bid</th>
+                                                        <th>Ask</th>
+                                                        <th>Volume</th>
+                                                        <th>Open Interest</th>
+                                                        <th>Implied Vol</th>
+                                                        <th>Analysis</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="putsTableBody">
+                                                    <tr>
+                                                        <td colspan="8" class="text-center">Enter a stock ticker to see options data</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indices Tab -->
+            <div class="tab-pane fade" id="indices">
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-globe me-2"></i>Major Market Indices
+                            </div>
+                            <div class="card-body">
+                                <div class="row" id="majorIndices">
+                                    <div class="col-md-3">
+                                        <div class="index-card">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="index-name">S&P 500</div>
+                                                    <small>I:SPX</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="index-value" id="spxValue">-</div>
+                                                    <div class="index-change" id="spxChange">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="index-card">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="index-name">Dow Jones</div>
+                                                    <small>I:DJI</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="index-value" id="djiValue">-</div>
+                                                    <div class="index-change" id="djiChange">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="index-card">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="index-name">NASDAQ</div>
+                                                    <small>I:COMP</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="index-value" id="compValue">-</div>
+                                                    <div class="index-change" id="compChange">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="index-card">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="index-name">Russell 2000</div>
+                                                    <small>I:RUT</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="index-value" id="rutValue">-</div>
+                                                    <div class="index-change" id="rutChange">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-chart-line me-2"></i>Index Performance & Trendlines
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <select class="form-select" id="indexSelector">
+                                        <option value="I:SPX" selected>S&P 500 (SPX)</option>
+                                        <option value="I:DJI">Dow Jones Industrial Average (DJI)</option>
+                                        <option value="I:COMP">NASDAQ Composite (COMP)</option>
+                                        <option value="I:RUT">Russell 2000 (RUT)</option>
+                                    </select>
+                                </div>
+                                <div class="chart-container" id="indexChart">
+                                    <div class="text-center py-5">
+                                        <div class="loader"></div>
+                                        <p class="text-muted mt-2">Loading index data...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-robot me-2"></i>Index Analysis & Market Outlook
+                            </div>
+                            <div class="card-body" id="indexAnalysis">
+                                <div class="text-center py-5">
+                                    <div class="loader"></div>
+                                    <p class="text-muted mt-2">Analyzing market data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-newspaper me-2"></i>Market News & Sentiment
+                            </div>
+                            <div class="card-body p-0" id="marketNewsContainer">
+                                <div class="text-center py-5">
+                                    <div class="loader"></div>
+                                    <p class="text-muted mt-2">Loading market news...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">MarketInsight Pro &copy; 2025 | Powered by Polygon.io API</p>
+            <p class="small text-muted">Disclaimer: All market data and analysis are for informational purposes only and do not constitute financial advice.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
+    <script>
+        // API Key for Polygon.io
+        const API_KEY = 'OzpY0a72peA3S0QIMAIq6Iuo78dwtSke';
+        
+        // Initialize variables to store data
+        let stockData = {};
+        let newsData = {};
+        let optionsData = {};
+        let indicesData = {};
+        
+        // Stock chart instance
+        let stockChartInstance = null;
+        let indexChartInstance = null;
+        
+        // DOM Ready
+        $(document).ready(function() {
+            // Initialize tabs
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                if (e.target.id === 'indicesTab') {
+                    loadMajorIndices();
+                    loadIndexData('I:SPX');
+                }
+            });
+            
+            // Initialize stock search
+            $('#searchStockBtn').click(function() {
+                const ticker = $('#stockTicker').val().trim().toUpperCase();
+                if (ticker) {
+                    searchStock(ticker);
+                }
+            });
+            
+            // Initialize options search
+            $('#searchOptionsBtn').click(function() {
+                const ticker = $('#optionsStockTicker').val().trim().toUpperCase();
+                if (ticker) {
+                    searchOptions(ticker);
+                }
+            });
+            
+            // Initialize index selector
+            $('#indexSelector').change(function() {
+                loadIndexData($(this).val());
+            });
+            
+            // Load initial index data
+            loadMajorIndices();
+            
+            // Handle enter key in search boxes
+            $('#stockTicker').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#searchStockBtn').click();
+                }
+            });
+            
+            $('#optionsStockTicker').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#searchOptionsBtn').click();
+                }
+            });
+        });
+        
+        // Function to search for a stock
+        function searchStock(ticker) {
+            // Show loading indicators
+            $('#stockChart').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading stock data...</p></div>');
+            $('#stockAnalysis').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Analyzing stock data...</p></div>');
+            $('#newsContainer').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading news data...</p></div>');
+            $('#stockSummary').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading summary data...</p></div>');
+            
+            // Get time range
+            const timeRange = $('#timeRange').val();
+            let fromDate, toDate;
+            const today = moment().format('YYYY-MM-DD');
+            
+            switch (timeRange) {
+                case '1D':
+                    fromDate = moment().subtract(1, 'days').format('YYYY-MM-DD');
+                    break;
+                case '1W':
+                    fromDate = moment().subtract(1, 'weeks').format('YYYY-MM-DD');
+                    break;
+                case '1M':
+                    fromDate = moment().subtract(1, 'months').format('YYYY-MM-DD');
+                    break;
+                case '3M':
+                    fromDate = moment().subtract(3, 'months').format('YYYY-MM-DD');
+                    break;
+                case '6M':
+                    fromDate = moment().subtract(6, 'months').format('YYYY-MM-DD');
+                    break;
+                case '1Y':
+                    fromDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
+                    break;
+                case 'YTD':
+                    fromDate = moment().startOf('year').format('YYYY-MM-DD');
+                    break;
+            }
+            
+            // First, get stock details
+            fetch(`https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK' && data.results) {
+                        stockData.details = data.results;
+                        displayStockSummary(data.results);
+                    } else {
