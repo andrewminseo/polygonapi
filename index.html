@@ -1,19 +1,9 @@
-<div class="grid grid-cols-2 gap-2 mb-4">
-                    <div>
-                        <p class="text-gray-400 text-sm">RSI (14)</p>
-                        <p class="font-bold ${rsi > 70 ? 'negative' : (rsi < 30 ? 'positive' : '')}">${rsi.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">MACD</p>
-                        <p class="font-bold ${macd.line > macd.signal ? 'positive' : 'negative'}">${macd.line.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400 text-sm">SMA (20)<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockSense - Comprehensive Market Analysis</title>
+    <title>StockSense - Stock Market Analysis</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
@@ -31,12 +21,14 @@
             --danger-color: #FF5000;
             --neutral-color: #8A8A8A;
             --border-color: #363A45;
+            --polygon-purple: #6441A4;
+            --polygon-dark: #1B1535;
         }
         
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
         .robinhood-card {
@@ -122,49 +114,6 @@
             opacity: 0.9;
         }
         
-        .custom-select {
-            background-color: var(--secondary-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            color: var(--text-color);
-            padding: 0.5rem 1rem;
-            outline: none;
-            transition: all 0.2s ease;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
-        }
-        
-        .custom-select:focus {
-            border-color: var(--primary-color);
-        }
-        
-        .timeline-item {
-            position: relative;
-            padding-left: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-left: 2px solid var(--border-color);
-        }
-        
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -0.5rem;
-            top: 0;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-        }
-        
-        .timeline-item:last-child {
-            border-left: 2px solid transparent;
-        }
-        
         .sentiment-positive {
             color: var(--success-color);
         }
@@ -175,82 +124,6 @@
         
         .sentiment-neutral {
             color: var(--neutral-color);
-        }
-        
-        .trend-line {
-            position: absolute;
-            height: 2px;
-            background-color: yellow;
-            opacity: 0.5;
-            z-index: 1;
-        }
-        
-        .support-line {
-            position: absolute;
-            height: 2px;
-            background-color: green;
-            opacity: 0.5;
-            z-index: 1;
-        }
-        
-        .resistance-line {
-            position: absolute;
-            height: 2px;
-            background-color: red;
-            opacity: 0.5;
-            z-index: 1;
-        }
-        
-        .option-card {
-            border-left: 4px solid transparent;
-            transition: all 0.2s ease;
-        }
-        
-        .option-card.call {
-            border-left-color: var(--success-color);
-        }
-        
-        .option-card.put {
-            border-left-color: var(--danger-color);
-        }
-        
-        .option-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid var(--primary-color);
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: var(--secondary-color);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #4A4D57;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #5A5D67;
         }
         
         .predict-tag {
@@ -276,46 +149,176 @@
             color: var(--neutral-color);
         }
         
-        /* Tooltip */
-        .tooltip {
-            position: relative;
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary-color);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .polygon-loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--polygon-purple);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* News items styling */
+        .news-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .news-time {
+            font-size: 0.75rem;
+            color: var(--neutral-color);
+        }
+        
+        .news-description {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #e0e0e0;
+        }
+        
+        /* Polygon.io branding */
+        .polygon-branding {
+            display: flex;
+            align-items: center;
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: var(--polygon-dark);
+            border: 1px solid var(--polygon-purple);
+        }
+        
+        .polygon-logo {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.25rem;
+            background-color: var(--polygon-purple);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .polygon-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--polygon-purple);
+        }
+        
+        .api-status {
             display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+            margin-left: 1rem;
         }
         
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: black;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 150%;
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .api-status.available {
+            background-color: rgba(0, 200, 5, 0.2);
+            color: var(--success-color);
         }
         
-        .tooltip .tooltiptext::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: black transparent transparent transparent;
+        .api-status.limited {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
         }
         
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
+        .api-status.exhausted {
+            background-color: rgba(255, 80, 0, 0.2);
+            color: var(--danger-color);
         }
         
-        /* Mobile responsiveness */
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4A4D57;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5A5D67;
+        }
+        
+        /* Enhance chart hover appearance */
+        .chart-tooltip {
+            background-color: var(--card-color) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 0.5rem !important;
+            padding: 0.5rem !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            color: var(--text-color) !important;
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            z-index: 1000;
+        }
+        
+        .sentiment-chart-container {
+            height: 200px;
+            width: 100%;
+            position: relative;
+        }
+
+        .insights-container {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .ticker-insight {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .ticker-insight.positive {
+            background-color: rgba(0, 200, 5, 0.1);
+            border-left: 3px solid var(--success-color);
+        }
+
+        .ticker-insight.negative {
+            background-color: rgba(255, 80, 0, 0.1);
+            border-left: 3px solid var(--danger-color);
+        }
+
+        .ticker-insight.neutral {
+            background-color: rgba(138, 138, 138, 0.1);
+            border-left: 3px solid var(--neutral-color);
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .flex-col-mobile {
                 flex-direction: column;
@@ -338,6 +341,13 @@
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center">
                 <h1 class="text-3xl font-bold text-white">Stock<span class="text-green-400">Sense</span></h1>
+                <div class="polygon-branding ml-4">
+                    <div class="polygon-logo">P</div>
+                    <div class="polygon-text">Polygon.io</div>
+                </div>
+                <div id="apiStatusBadge" class="api-status available">
+                    API: 5/5 Remaining
+                </div>
             </div>
             <div class="relative">
                 <input type="text" id="searchInput" class="custom-input w-64 pl-10" placeholder="Search stocks...">
@@ -352,8 +362,7 @@
             <div class="border-b border-gray-700 mb-6">
                 <div class="flex space-x-2">
                     <button class="tab-button active" data-tab="stocks">Stocks</button>
-                    <button class="tab-button" data-tab="options">Options</button>
-                    <button class="tab-button" data-tab="indices">Indices</button>
+                    <button class="tab-button" data-tab="watchlist">Watchlist</button>
                 </div>
             </div>
 
@@ -373,7 +382,7 @@
                                     <p id="stockChange" class="text-sm">0.00 (0.00%)</p>
                                 </div>
                             </div>
-                            <div class="mb-4 flex space-x-4">
+                            <div class="mb-4 flex space-x-4 overflow-x-auto">
                                 <button class="tab-button active chart-interval" data-interval="1D">1D</button>
                                 <button class="tab-button chart-interval" data-interval="1W">1W</button>
                                 <button class="tab-button chart-interval" data-interval="1M">1M</button>
@@ -383,65 +392,183 @@
                             </div>
                             <div class="relative">
                                 <canvas id="stockChart" height="300"></canvas>
-                                <div id="indexAnalysis">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Index Prediction</h3>
-                                <div id="indexPrediction">
+                                <div id="chartLoading" class="absolute inset-0 flex items-center justify-center bg-opacity-75 bg-gray-900">
                                     <div class="loading-spinner"></div>
                                 </div>
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
+                                <div id="technicalAnalysis">
+                                    <div class="grid grid-cols-2 gap-2 mb-4">
+                                        <div>
+                                            <p class="text-gray-400 text-sm">RSI (14)</p>
+                                            <p id="rsiValue" class="font-bold">-</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-400 text-sm">MACD</p>
+                                            <p id="macdValue" class="font-bold">-</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-400 text-sm">SMA (20)</p>
+                                            <p id="sma20Value" class="font-bold">-</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-400 text-sm">SMA (50)</p>
+                                            <p id="sma50Value" class="font-bold">-</p>
+                                        </div>
+                                    </div>
+                                    <div id="technicalSignal" class="text-center p-2 rounded bg-gray-800">
+                                        <p class="font-bold text-lg">Technical Signal: <span id="signalValue">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Sentiment Analysis</h3>
+                                <div id="sentimentAnalysisContainer">
+                                    <div class="sentiment-chart-container mb-3">
+                                        <canvas id="sentimentChart"></canvas>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span>Last 7 days</span>
+                                        <span id="sentimentUpdateTime" class="text-gray-400">Updated: --</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Sector Performance</h3>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full">
-                                    <thead>
-                                        <tr class="border-b border-gray-700">
-                                            <th class="py-3 px-6 text-left">Sector</th>
-                                            <th class="py-3 px-6 text-right">Day</th>
-                                            <th class="py-3 px-6 text-right">Week</th>
-                                            <th class="py-3 px-6 text-right">Month</th>
-                                            <th class="py-3 px-6 text-right">YTD</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="sectorPerformance">
-                                        <tr>
-                                            <td colspan="5" class="py-4 text-center">
-                                                <div class="loading-spinner"></div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Open</p>
+                                    <p id="stockOpen" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">High</p>
+                                    <p id="stockHigh" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Low</p>
+                                    <p id="stockLow" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Prev Close</p>
+                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Volume</p>
+                                    <p id="stockVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Avg Volume</p>
+                                    <p id="stockAvgVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Market Cap</p>
+                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
+                                    <p id="stockPE" class="font-bold">0.00</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column - Market Indices and News -->
+                    <!-- Right Column - News and Sentiment -->
                     <div class="w-full lg:w-4/12 px-4 mb-8">
                         <div class="robinhood-card p-6 mb-6">
-                            <h3 class="text-xl font-bold mb-4">Popular Indices</h3>
-                            <div id="popularIndices">
-                                <div class="loading-spinner"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold">Market Sentiment</h3>
+                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
                             </div>
-                        </div>
-
-                        <div class="robinhood-card p-6 mb-6">
-                            <h3 class="text-xl font-bold mb-4">Economic Calendar</h3>
-                            <div id="economicCalendar">
-                                <div class="loading-spinner"></div>
+                            <div class="mb-4">
+                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-red-500">Sell</span>
+                                    <span class="text-yellow-500">Hold</span>
+                                    <span class="text-green-500">Buy</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Price Target:</span>
+                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Upside:</span>
+                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
+                                </div>
+                                <div class="mb-4">
+                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
+                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold mb-2">Latest Insights</h4>
+                                    <div id="latestInsights" class="insights-container">
+                                        <div class="text-center py-3 text-gray-400 text-sm">
+                                            <div class="polygon-loading-spinner mb-2"></div>
+                                            Loading insights...
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Market News</h3>
-                            <div id="marketNews">
-                                <div class="loading-spinner"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold">Latest News</h3>
+                                <button id="refreshNews" class="p-1 rounded hover:bg-gray-700 transition-colors">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div id="newsContainer">
+                                <div class="text-center py-8">
+                                    <div class="polygon-loading-spinner mb-3"></div>
+                                    <p class="text-gray-400">Loading news from Polygon.io...</p>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Watchlist Tab Content -->
+            <div id="watchlist" class="tab-content">
+                <div class="robinhood-card p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Your Watchlist</h3>
+                        <div class="flex">
+                            <input type="text" id="addWatchlistInput" class="custom-input mr-2" placeholder="Add symbol...">
+                            <button id="addWatchlistBtn" class="btn-primary">Add</button>
+                        </div>
+                    </div>
+                    <div id="watchlistContainer" class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Symbol</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Company</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Change</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700" id="watchlistTableBody">
+                                <!-- Watchlist items will be added here -->
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+                                        Your watchlist is empty. Add stocks to track them.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -455,14 +582,18 @@
         
         // Global Variables
         let currentStock = 'AAPL';
-        let currentIndex = 'I:SPX';
         let stockChart = null;
-        let indexChart = null;
+        let sentimentChart = null;
+        let apiRequestsRemaining = 5;
+        const apiRequestsLimit = 5;
+        let lastRequestTime = 0;
+        let requestQueue = [];
+        let processingQueue = false;
         
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Tab Navigation
-            const tabButtons = document.querySelectorAll('.tab-button:not(.chart-interval):not(.options-type-tab):not(.index-interval)');
+            const tabButtons = document.querySelectorAll('.tab-button:not(.chart-interval)');
             const tabContents = document.querySelectorAll('.tab-content');
             
             tabButtons.forEach(button => {
@@ -483,33 +614,7 @@
                     chartIntervals.forEach(int => int.classList.remove('active'));
                     interval.classList.add('active');
                     
-                    fetchStockData(currentStock, interval.dataset.interval);
-                });
-            });
-            
-            // Index Interval Navigation
-            const indexIntervals = document.querySelectorAll('.index-interval');
-            
-            indexIntervals.forEach(interval => {
-                interval.addEventListener('click', () => {
-                    indexIntervals.forEach(int => int.classList.remove('active'));
-                    interval.classList.add('active');
-                    
-                    fetchIndexData(currentIndex, interval.dataset.interval);
-                });
-            });
-            
-            // Options Type Tabs
-            const optionsTypeTabs = document.querySelectorAll('.options-type-tab');
-            const optionsContents = document.querySelectorAll('.options-content');
-            
-            optionsTypeTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    optionsTypeTabs.forEach(t => t.classList.remove('active'));
-                    optionsContents.forEach(content => content.classList.add('hidden'));
-                    
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.type + 'Options').classList.remove('hidden');
+                    enqueueApiRequest(() => fetchStockData(currentStock, interval.dataset.interval));
                 });
             });
             
@@ -524,8 +629,8 @@
                     return;
                 }
                 
-                searchStocks(query);
-            }, 300));
+                enqueueApiRequest(() => searchStocks(query));
+            }, 500));
             
             // Hide search results when clicking outside
             document.addEventListener('click', function(event) {
@@ -534,1420 +639,89 @@
                 }
             });
             
-            // Options Symbol Input
-            const optionsSymbolInput = document.getElementById('optionsSymbol');
-            const loadOptionsButton = document.getElementById('loadOptions');
+            // Refresh News Button
+            document.getElementById('refreshNews').addEventListener('click', function() {
+                enqueueApiRequest(() => fetchStockNews(currentStock));
+            });
             
-            optionsSymbolInput.addEventListener('change', function() {
-                const symbol = optionsSymbolInput.value.trim().toUpperCase();
+            // Watchlist functionality
+            document.getElementById('addWatchlistBtn').addEventListener('click', function() {
+                const symbol = document.getElementById('addWatchlistInput').value.trim().toUpperCase();
                 if (symbol) {
-                    fetchOptionExpirationDates(symbol);
+                    addToWatchlist(symbol);
+                    document.getElementById('addWatchlistInput').value = '';
                 }
             });
             
-            loadOptionsButton.addEventListener('click', function() {
-                const symbol = optionsSymbolInput.value.trim().toUpperCase();
-                const expirationDate = document.getElementById('expirationDate').value;
-                
-                if (symbol && expirationDate) {
-                    loadOptionChain(symbol, expirationDate);
-                } else {
-                    alert('Please select both a symbol and expiration date');
-                }
-            });
-            
-            // Strategy Builder
-            const suggestStrategiesButton = document.getElementById('suggestStrategies');
-            
-            suggestStrategiesButton.addEventListener('click', function() {
-                const direction = document.getElementById('marketDirection').value;
-                const risk = document.getElementById('riskTolerance').value;
-                const budget = document.getElementById('optionsBudget').value;
-                
-                if (!budget) {
-                    alert('Please enter a budget amount');
-                    return;
-                }
-                
-                suggestOptionsStrategies(direction, risk, parseFloat(budget));
-            });
+            // Initialize charts
+            initializeSentimentChart();
             
             // Initialize with default data
-            fetchStockData(currentStock, '1M');
-            fetchStockDetails(currentStock);
-            fetchStockNews(currentStock);
-            fetchIndexData(currentIndex, '1M');
-            loadPopularIndices();
-            loadEconomicCalendar();
-            loadMarketNews();
-            loadSectorPerformance();
+            enqueueApiRequest(() => fetchStockData(currentStock, '1M'));
+            enqueueApiRequest(() => fetchStockDetails(currentStock));
+            enqueueApiRequest(() => fetchStockNews(currentStock));
+            
+            // Load watchlist from localStorage
+            loadWatchlist();
         });
         
-        // Search for stocks
-        function searchStocks(query) {
-            const endpoint = `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(query)}&active=true&limit=10&sort=ticker&apiKey=${API_KEY}`;
+        // API Request Rate Limiting
+        function enqueueApiRequest(requestFunction) {
+            requestQueue.push(requestFunction);
+            updateApiStatusDisplay();
             
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        const resultsHTML = data.results
-                            .filter(result => result.market === 'stocks')
-                            .map(result => `
-                                <div class="p-3 hover:bg-gray-700 cursor-pointer search-result" data-symbol="${result.ticker}" data-name="${result.name}">
-                                    <div class="font-bold">${result.ticker}</div>
-                                    <div class="text-sm text-gray-400">${result.name}</div>
-                                </div>
-                            `).join('');
-                        
-                        searchResults.innerHTML = resultsHTML;
-                        searchResults.classList.remove('hidden');
-                        
-                        // Add click event to search results
-                        document.querySelectorAll('.search-result').forEach(result => {
-                            result.addEventListener('click', function() {
-                                const symbol = this.dataset.symbol;
-                                const name = this.dataset.name;
-                                
-                                currentStock = symbol;
-                                document.getElementById('stockSymbol').textContent = symbol;
-                                document.getElementById('stockName').textContent = name;
-                                document.getElementById('searchInput').value = symbol;
-                                
-                                fetchStockData(symbol, '1M');
-                                fetchStockDetails(symbol);
-                                fetchStockNews(symbol);
-                                
-                                searchResults.classList.add('hidden');
-                            });
-                        });
-                    } else {
-                        searchResults.innerHTML = '<div class="p-3 text-gray-400">No results found</div>';
-                        searchResults.classList.remove('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error searching for stocks:', error);
-                    searchResults.innerHTML = '<div class="p-3 text-gray-400">Error searching for stocks</div>';
-                    searchResults.classList.remove('hidden');
-                });
-        }
-        
-        // Fetch stock data for chart
-        function fetchStockData(symbol, interval) {
-            let multiplier = 1;
-            let timespan = 'day';
-            let from, to;
-            
-            const now = new Date();
-            to = formatDate(now);
-            
-            switch (interval) {
-                case '1D':
-                    multiplier = 5;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 1)));
-                    break;
-                case '1W':
-                    multiplier = 30;
-                    timespan = 'minute';
-                    from = formatDate(new Date(now.setDate(now.getDate() - 7)));
-                    break;
-                case '1M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-                    break;
-                case '3M':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 3)));
-                    break;
-                case '1Y':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setFullYear(now.getFullYear() - 1)));
-                    break;
-                case 'YTD':
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = `${now.getFullYear()}-01-01`;
-                    break;
-                default:
-                    multiplier = 1;
-                    timespan = 'day';
-                    from = formatDate(new Date(now.setMonth(now.getMonth() - 1)));
-            }
-            
-            const endpoint = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/${multiplier}/${timespan}/${from}/${to}?adjusted=true&sort=asc&apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        renderStockChart(data.results, interval);
-                        updateLatestPrice(data.results[data.results.length - 1], data.results[data.results.length - 2]);
-                        analyseTechnicals(data.results);
-                        makePrediction(data.results);
-                    } else {
-                        console.error('No stock data available');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching stock data:', error);
-                });
-        }
-        
-        // Render stock chart
-        function renderStockChart(data, interval) {
-            const ctx = document.getElementById('stockChart').getContext('2d');
-            
-            if (stockChart) {
-                stockChart.destroy();
-            }
-            
-            // Prepare data for Chart.js
-            const chartData = {
-                labels: data.map(item => new Date(item.t)),
-                datasets: [{
-                    label: currentStock,
-                    data: data.map(item => item.c),
-                    borderColor: '#00C805',
-                    backgroundColor: 'rgba(0, 200, 5, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#00C805',
-                    pointHoverBorderColor: '#FFFFFF',
-                    fill: true,
-                    tension: 0.1
-                }]
-            };
-            
-            // Chart configuration
-            const config = {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(30, 33, 36, 0.9)',
-                            titleColor: '#FFFFFF',
-                            bodyColor: '#FFFFFF',
-                            borderColor: 'rgba(54, 58, 69, 0.9)',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    if (interval === '1D') {
-                                        return moment(tooltipItems[0].raw).format('h:mm A');
-                                    } else {
-                                        return moment(tooltipItems[0].raw).format('MMM D, YYYY');
-                                    }
-                                },
-                                label: function(context) {
-                                    return `${context.raw.toFixed(2)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: interval === '1D' || interval === '1W' ? 'hour' : 'day',
-                                displayFormats: {
-                                    hour: 'h:mm A',
-                                    day: 'MMM D'
-                                }
-                            },
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#8A8A8A',
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: 6
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(54, 58, 69, 0.5)'
-                            },
-                            ticks: {
-                                color: '#8A8A8A',
-                                callback: function(value) {
-                                    return 'trendLines"></div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
-                                <div id="technicalAnalysis">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
-                                <div id="stockPrediction">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p class="text-gray-400 text-sm">Open</p>
-                                    <p id="stockOpen" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">High</p>
-                                    <p id="stockHigh" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Low</p>
-                                    <p id="stockLow" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Prev Close</p>
-                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Volume</p>
-                                    <p id="stockVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Avg Volume</p>
-                                    <p id="stockAvgVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Market Cap</p>
-                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
-                                    <p id="stockPE" class="font-bold">0.00</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - News and Sentiment -->
-                    <div class="w-full lg:w-4/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Market Sentiment</h3>
-                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
-                            </div>
-                            <div class="mb-4">
-                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
-                                <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
-                                </div>
-                                <div class="flex justify-between text-xs mt-1">
-                                    <span class="text-red-500">Sell</span>
-                                    <span class="text-yellow-500">Hold</span>
-                                    <span class="text-green-500">Buy</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Price Target:</span>
-                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Upside:</span>
-                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
-                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
-                            <div id="newsContainer">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Options Tab Content -->
-            <div id="options" class="tab-content">
-                <div class="robinhood-card p-6 mb-6">
-                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
-                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
-                            <select id="expirationDate" class="custom-select w-full md:w-48">
-                                <option value="">Select date</option>
-                            </select>
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
-                                Load Options
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="optionsSymbolInfo" class="mb-6 hidden">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
-                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
-                            </div>
-                            <div class="text-right">
-                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
-                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex mb-4 border-b border-gray-700">
-                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
-                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
-                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
-                    </div>
-                    
-                    <div id="suggestedOptions" class="options-content">
-                        <div class="text-center py-4" id="suggestedOptionsLoader">
-                            <div class="loading-spinner"></div>
-                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
-                        </div>
-                        <div id="suggestedOptionsContent" class="hidden">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
-                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
-                                </div>
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
-                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
-                                </div>
-                            </div>
-                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
-                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <!-- Recommendations will be added here -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="callOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="callOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div id="putOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="putOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="robinhood-card p-6">
-                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
-                    <div class="mb-6">
-                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
-                                <select id="marketDirection" class="custom-select w-full">
-                                    <option value="bullish">Bullish</option>
-                                    <option value="bearish">Bearish</option>
-                                    <option value="neutral">Neutral</option>
-                                    <option value="volatile">Volatile</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
-                                <select id="riskTolerance" class="custom-select w-full">
-                                    <option value="conservative">Conservative</option>
-                                    <option value="moderate">Moderate</option>
-                                    <option value="aggressive">Aggressive</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
-                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
-                            </div>
-                        </div>
-                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
-                    </div>
-                    <div id="strategySuggestions" class="hidden">
-                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
-                        <div id="strategyList" class="space-y-4">
-                            <!-- Strategy recommendations will be added here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Indices Tab Content -->
-            <div id="indices" class="tab-content">
-                <div class="flex flex-wrap -mx-4">
-                    <!-- Left Column - Index Chart and Analysis -->
-                    <div class="w-full lg:w-8/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <div>
-                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
-                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
-                                </div>
-                                <div class="text-right">
-                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
-                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
-                                </div>
-                            </div>
-                            <div class="mb-4 flex space-x-4">
-                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
-                                <button class="tab-button index-interval" data-interval="1W">1W</button>
-                                <button class="tab-button index-interval" data-interval="1M">1M</button>
-                                <button class="tab-button index-interval" data-interval="3M">3M</button>
-                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
-                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
-                            </div>
-                            <div>
-                                <canvas id="indexChart" height="300"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
-                                <div id=" + value.toFixed(2);
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            
-            stockChart = new Chart(ctx, config);
-            
-            // Identify trend lines
-            findTrendLines(data);
-        }
-        
-        // Update latest price info
-        function updateLatestPrice(latestData, previousData) {
-            const price = latestData.c;
-            const previousClose = previousData ? previousData.c : 0;
-            const change = price - previousClose;
-            const changePercent = (change / previousClose) * 100;
-            
-            document.getElementById('stockPrice').textContent = `${price.toFixed(2)}`;
-            document.getElementById('stockChange').textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
-            document.getElementById('stockChange').className = change >= 0 ? 'text-sm positive' : 'text-sm negative';
-        }
-        
-        // Fetch stock details
-        function fetchStockDetails(symbol) {
-            const endpoint = `https://api.polygon.io/v3/reference/tickers/${symbol}?apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results) {
-                        const details = data.results;
-                        
-                        // Update stock details
-                        document.getElementById('stockName').textContent = details.name;
-                        
-                        // Generate random market data for demonstration
-                        const marketCap = details.market_cap || Math.random() * 1000000000;
-                        const pe = 10 + Math.random() * 30;
-                        const volume = Math.floor(Math.random() * 10000000);
-                        const avgVolume = Math.floor(Math.random() * 10000000);
-                        const open = Math.random() * 200;
-                        const high = open + Math.random() * 10;
-                        const low = open - Math.random() * 10;
-                        const prevClose = open - Math.random() * 5;
-                        
-                        document.getElementById('stockMarketCap').textContent = formatCurrency(marketCap);
-                        document.getElementById('stockPE').textContent = pe.toFixed(2);
-                        document.getElementById('stockVolume').textContent = formatNumber(volume);
-                        document.getElementById('stockAvgVolume').textContent = formatNumber(avgVolume);
-                        document.getElementById('stockOpen').textContent = `${open.toFixed(2)}`;
-                        document.getElementById('stockHigh').textContent = `${high.toFixed(2)}`;
-                        document.getElementById('stockLow').textContent = `${low.toFixed(2)}`;
-                        document.getElementById('stockPrevClose').textContent = `${prevClose.toFixed(2)}`;
-                        
-                        // Generate random sentiment data
-                        generateSentimentData(symbol);
-                    } else {
-                        console.error('No stock details available');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching stock details:', error);
-                });
-        }
-        
-        // Generate sentiment data
-        function generateSentimentData(symbol) {
-            // Random sentiment (0-100)
-            const sentiment = Math.random() * 100;
-            document.getElementById('sentimentIndicator').style.width = `${sentiment}%`;
-            
-            // Set color based on sentiment
-            if (sentiment < 33) {
-                document.getElementById('sentimentIndicator').className = 'bg-red-500 h-2.5 rounded-full';
-                document.getElementById('overallSentiment').textContent = 'SELL';
-                document.getElementById('overallSentiment').className = 'predict-tag predict-sell';
-            } else if (sentiment < 66) {
-                document.getElementById('sentimentIndicator').className = 'bg-yellow-500 h-2.5 rounded-full';
-                document.getElementById('overallSentiment').textContent = 'HOLD';
-                document.getElementById('overallSentiment').className = 'predict-tag predict-hold';
-            } else {
-                document.getElementById('sentimentIndicator').className = 'bg-green-500 h-2.5 rounded-full';
-                document.getElementById('overallSentiment').textContent = 'BUY';
-                document.getElementById('overallSentiment').className = 'predict-tag predict-buy';
-            }
-            
-            // Random price target (10-30% above current price)
-            const currentPrice = parseFloat(document.getElementById('stockPrice').textContent.replace('trendLines"></div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
-                                <div id="technicalAnalysis">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
-                                <div id="stockPrediction">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p class="text-gray-400 text-sm">Open</p>
-                                    <p id="stockOpen" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">High</p>
-                                    <p id="stockHigh" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Low</p>
-                                    <p id="stockLow" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Prev Close</p>
-                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Volume</p>
-                                    <p id="stockVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Avg Volume</p>
-                                    <p id="stockAvgVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Market Cap</p>
-                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
-                                    <p id="stockPE" class="font-bold">0.00</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - News and Sentiment -->
-                    <div class="w-full lg:w-4/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Market Sentiment</h3>
-                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
-                            </div>
-                            <div class="mb-4">
-                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
-                                <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
-                                </div>
-                                <div class="flex justify-between text-xs mt-1">
-                                    <span class="text-red-500">Sell</span>
-                                    <span class="text-yellow-500">Hold</span>
-                                    <span class="text-green-500">Buy</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Price Target:</span>
-                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Upside:</span>
-                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
-                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
-                            <div id="newsContainer">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Options Tab Content -->
-            <div id="options" class="tab-content">
-                <div class="robinhood-card p-6 mb-6">
-                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
-                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
-                            <select id="expirationDate" class="custom-select w-full md:w-48">
-                                <option value="">Select date</option>
-                            </select>
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
-                                Load Options
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="optionsSymbolInfo" class="mb-6 hidden">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
-                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
-                            </div>
-                            <div class="text-right">
-                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
-                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex mb-4 border-b border-gray-700">
-                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
-                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
-                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
-                    </div>
-                    
-                    <div id="suggestedOptions" class="options-content">
-                        <div class="text-center py-4" id="suggestedOptionsLoader">
-                            <div class="loading-spinner"></div>
-                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
-                        </div>
-                        <div id="suggestedOptionsContent" class="hidden">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
-                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
-                                </div>
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
-                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
-                                </div>
-                            </div>
-                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
-                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <!-- Recommendations will be added here -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="callOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="callOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div id="putOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="putOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="robinhood-card p-6">
-                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
-                    <div class="mb-6">
-                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
-                                <select id="marketDirection" class="custom-select w-full">
-                                    <option value="bullish">Bullish</option>
-                                    <option value="bearish">Bearish</option>
-                                    <option value="neutral">Neutral</option>
-                                    <option value="volatile">Volatile</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
-                                <select id="riskTolerance" class="custom-select w-full">
-                                    <option value="conservative">Conservative</option>
-                                    <option value="moderate">Moderate</option>
-                                    <option value="aggressive">Aggressive</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
-                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
-                            </div>
-                        </div>
-                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
-                    </div>
-                    <div id="strategySuggestions" class="hidden">
-                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
-                        <div id="strategyList" class="space-y-4">
-                            <!-- Strategy recommendations will be added here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Indices Tab Content -->
-            <div id="indices" class="tab-content">
-                <div class="flex flex-wrap -mx-4">
-                    <!-- Left Column - Index Chart and Analysis -->
-                    <div class="w-full lg:w-8/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <div>
-                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
-                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
-                                </div>
-                                <div class="text-right">
-                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
-                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
-                                </div>
-                            </div>
-                            <div class="mb-4 flex space-x-4">
-                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
-                                <button class="tab-button index-interval" data-interval="1W">1W</button>
-                                <button class="tab-button index-interval" data-interval="1M">1M</button>
-                                <button class="tab-button index-interval" data-interval="3M">3M</button>
-                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
-                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
-                            </div>
-                            <div>
-                                <canvas id="indexChart" height="300"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
-                                <div id=", ''));
-            const upside = 10 + Math.random() * 20;
-            const priceTarget = currentPrice * (1 + upside / 100);
-            
-            document.getElementById('priceTarget').textContent = `${priceTarget.toFixed(2)}`;
-            document.getElementById('priceUpside').textContent = `+${upside.toFixed(2)}%`;
-            document.getElementById('priceUpside').className = 'font-bold ml-2 positive';
-            
-            // AI Prediction
-            const predictions = ['Strong Buy', 'Buy', 'Hold', 'Sell', 'Strong Sell'];
-            const aiPrediction = predictions[Math.floor(sentiment / 25)];
-            document.getElementById('aiPrediction').textContent = aiPrediction;
-            
-            switch (aiPrediction) {
-                case 'Strong Buy':
-                case 'Buy':
-                    document.getElementById('aiPrediction').className = 'font-bold ml-2 positive';
-                    break;
-                case 'Hold':
-                    document.getElementById('aiPrediction').className = 'font-bold ml-2';
-                    break;
-                case 'Sell':
-                case 'Strong Sell':
-                    document.getElementById('aiPrediction').className = 'font-bold ml-2 negative';
-                    break;
+            if (!processingQueue) {
+                processNextRequest();
             }
         }
         
-        // Fetch stock news
-        function fetchStockNews(symbol) {
-            const endpoint = `https://api.polygon.io/v2/reference/news?ticker=${symbol}&limit=10&apiKey=${API_KEY}`;
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        renderNewsItems(data.results, 'newsContainer');
-                    } else {
-                        document.getElementById('newsContainer').innerHTML = '<p class="text-gray-400">No news available</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching stock news:', error);
-                    document.getElementById('newsContainer').innerHTML = '<p class="text-gray-400">Error loading news</p>';
-                });
-        }
-        
-        // Render news items
-        function renderNewsItems(news, containerId) {
-            const container = document.getElementById(containerId);
-            const newsHTML = news.map(item => {
-                const sentiment = analyzeSentiment(item.description || '');
-                return `
-                    <div class="border-b border-gray-700 py-4 last:border-0">
-                        <div class="flex items-start">
-                            ${item.image_url ? `
-                                <div class="w-16 h-16 bg-gray-700 rounded overflow-hidden flex-shrink-0 mr-4">
-                                    <img src="${item.image_url}" alt="${item.title}" class="w-full h-full object-cover">
-                                </div>
-                            ` : ''}
-                            <div class="flex-1">
-                                <a href="${item.article_url}" target="_blank" class="block hover:text-green-400 transition-colors duration-200">
-                                    <h4 class="font-bold text-sm mb-1">${item.title}</h4>
-                                </a>
-                                <p class="text-xs text-gray-400 mb-2">${formatNewsDate(item.published_utc)} · ${item.publisher.name}</p>
-                                <div class="flex items-center">
-                                    <span class="sentiment-${sentiment.class} text-xs mr-2">${sentiment.label}</span>
-                                    <span class="text-xs text-gray-400">${sentiment.analysis}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            container.innerHTML = newsHTML;
-        }
-        
-        // Analyze news sentiment
-        function analyzeSentiment(text) {
-            // Simple sentiment analysis
-            const positiveWords = ['increase', 'growth', 'profit', 'up', 'rise', 'gain', 'positive', 'bullish', 'record', 'beat', 'exceed', 'upgrade'];
-            const negativeWords = ['decrease', 'decline', 'loss', 'down', 'fall', 'drop', 'negative', 'bearish', 'miss', 'below', 'downgrade'];
-            
-            let positiveCount = 0;
-            let negativeCount = 0;
-            
-            const words = text.toLowerCase().split(/\s+/);
-            
-            words.forEach(word => {
-                if (positiveWords.includes(word)) positiveCount++;
-                if (negativeWords.includes(word)) negativeCount++;
-            });
-            
-            // Determine sentiment
-            if (positiveCount > negativeCount) {
-                return {
-                    label: 'Positive',
-                    class: 'positive',
-                    analysis: 'Potentially bullish for the stock'
-                };
-            } else if (negativeCount > positiveCount) {
-                return {
-                    label: 'Negative',
-                    class: 'negative',
-                    analysis: 'Could impact stock negatively'
-                };
-            } else {
-                return {
-                    label: 'Neutral',
-                    class: 'neutral',
-                    analysis: 'Limited market impact expected'
-                };
+        function processNextRequest() {
+            if (requestQueue.length === 0) {
+                processingQueue = false;
+                return;
             }
-        }
-        
-        // Analyze technicals
-        function analyseTechnicals(data) {
-            const container = document.getElementById('technicalAnalysis');
             
-            // Calculate technical indicators
-            const closes = data.map(item => item.c);
-            const volumes = data.map(item => item.v || 0);
+            processingQueue = true;
             
-            // Simple Moving Averages
-            const sma20 = calculateSMA(closes, 20);
-            const sma50 = calculateSMA(closes, 50);
-            const sma200 = calculateSMA(closes, 200);
+            const now = Date.now();
+            const timeElapsed = now - lastRequestTime;
             
-            // RSI (Relative Strength Index)
-            const rsi = calculateRSI(closes, 14);
-            
-            // MACD (Moving Average Convergence Divergence)
-            const macd = calculateMACD(closes);
-            
-            // Volume Analysis
-            const volumeAvg = volumes.reduce((sum, vol) => sum + vol, 0) / volumes.length;
-            const recentVolume = volumes[volumes.length - 1] || 0;
-            const volumeRatio = recentVolume / volumeAvg;
-            
-            // Current price
-            const currentPrice = closes[closes.length - 1];
-            
-            // Technical signals
-            const signals = [];
-            
-            // SMA Signals
-            if (currentPrice > sma20) signals.push({ name: 'Price > SMA20', signal: 'bullish' });
-            if (currentPrice < sma20) signals.push({ name: 'Price < SMA20', signal: 'bearish' });
-            if (sma20 > sma50) signals.push({ name: 'SMA20 > SMA50', signal: 'bullish' });
-            if (sma20 < sma50) signals.push({ name: 'SMA20 < SMA50', signal: 'bearish' });
-            if (currentPrice > sma200) signals.push({ name: 'Price > SMA200', signal: 'bullish' });
-            if (currentPrice < sma200) signals.push({ name: 'Price < SMA200', signal: 'bearish' });
-            
-            // RSI Signals
-            if (rsi > 70) signals.push({ name: 'RSI > 70', signal: 'overbought' });
-            if (rsi < 30) signals.push({ name: 'RSI < 30', signal: 'oversold' });
-            
-            // MACD Signals
-            if (macd.line > macd.signal) signals.push({ name: 'MACD > Signal', signal: 'bullish' });
-            if (macd.line < macd.signal) signals.push({ name: 'MACD < Signal', signal: 'bearish' });
-            
-            // Volume Signals
-            if (volumeRatio > 1.5) signals.push({ name: 'High Volume', signal: 'strong' });
-            if (volumeRatio < 0.5) signals.push({ name: 'Low Volume', signal: 'weak' });
-            
-            // Candlestick Patterns (simplified)
-            const lastFew = data.slice(-5);
-            if (lastFew.length >= 2) {
-                const last = lastFew[lastFew.length - 1];
-                const prev = lastFew[lastFew.length - 2];
-                
-                // Bullish Engulfing
-                if (prev.c < prev.o && last.c > last.o && last.c > prev.o && last.o < prev.c) {
-                    signals.push({ name: 'Bullish Engulfing', signal: 'bullish' });
+            // If we have requests available or enough time has passed (rate limit is per minute)
+            if (apiRequestsRemaining > 0 || timeElapsed >= 60000) {
+                // If enough time has passed, reset the counter
+                if (timeElapsed >= 60000) {
+                    apiRequestsRemaining = apiRequestsLimit;
                 }
                 
-                // Bearish Engulfing
-                if (prev.c > prev.o && last.c < last.o && last.c < prev.o && last.o > prev.c) {
-                    signals.push({ name: 'Bearish Engulfing', signal: 'bearish' });
-                }
-            }
-            
-            // Overall Analysis
-            const bullishSignals = signals.filter(s => s.signal === 'bullish' || s.signal === 'oversold').length;
-            const bearishSignals = signals.filter(s => s.signal === 'bearish' || s.signal === 'overbought').length;
-            
-            let overallSignal;
-            if (bullishSignals > bearishSignals + 1) {
-                overallSignal = { text: 'Strong Buy', class: 'positive' };
-            } else if (bullishSignals > bearishSignals) {
-                overallSignal = { text: 'Buy', class: 'positive' };
-            } else if (bearishSignals > bullishSignals + 1) {
-                overallSignal = { text: 'Strong Sell', class: 'negative' };
-            } else if (bearishSignals > bullishSignals) {
-                overallSignal = { text: 'Sell', class: 'negative' };
-            } else {
-                overallSignal = { text: 'Hold', class: '' };
-            }
-            
-            // Render technical analysis
-            container.innerHTML = `
-                <div class="mb-4">
-                    <span class="text-xl font-bold ${overallSignal.class}">${overallSignal.text}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-trendLines"></div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
-                                <div id="technicalAnalysis">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
-                                <div id="stockPrediction">
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p class="text-gray-400 text-sm">Open</p>
-                                    <p id="stockOpen" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">High</p>
-                                    <p id="stockHigh" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Low</p>
-                                    <p id="stockLow" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Prev Close</p>
-                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Volume</p>
-                                    <p id="stockVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Avg Volume</p>
-                                    <p id="stockAvgVolume" class="font-bold">0</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">Market Cap</p>
-                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
-                                    <p id="stockPE" class="font-bold">0.00</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - News and Sentiment -->
-                    <div class="w-full lg:w-4/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Market Sentiment</h3>
-                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
-                            </div>
-                            <div class="mb-4">
-                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
-                                <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
-                                </div>
-                                <div class="flex justify-between text-xs mt-1">
-                                    <span class="text-red-500">Sell</span>
-                                    <span class="text-yellow-500">Hold</span>
-                                    <span class="text-green-500">Buy</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Price Target:</span>
-                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Upside:</span>
-                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
-                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
-                            <div id="newsContainer">
-                                <div class="loading-spinner"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Options Tab Content -->
-            <div id="options" class="tab-content">
-                <div class="robinhood-card p-6 mb-6">
-                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
-                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
-                            <select id="expirationDate" class="custom-select w-full md:w-48">
-                                <option value="">Select date</option>
-                            </select>
-                        </div>
-                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
-                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
-                                Load Options
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="optionsSymbolInfo" class="mb-6 hidden">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
-                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
-                            </div>
-                            <div class="text-right">
-                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
-                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex mb-4 border-b border-gray-700">
-                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
-                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
-                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
-                    </div>
-                    
-                    <div id="suggestedOptions" class="options-content">
-                        <div class="text-center py-4" id="suggestedOptionsLoader">
-                            <div class="loading-spinner"></div>
-                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
-                        </div>
-                        <div id="suggestedOptionsContent" class="hidden">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
-                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
-                                </div>
-                                <div class="robinhood-card p-4">
-                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
-                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
-                                </div>
-                            </div>
-                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
-                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <!-- Recommendations will be added here -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="callOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="callOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div id="putOptions" class="options-content hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="py-3 px-6 text-left">Strike</th>
-                                        <th class="py-3 px-6 text-right">Last Price</th>
-                                        <th class="py-3 px-6 text-right">Bid</th>
-                                        <th class="py-3 px-6 text-right">Ask</th>
-                                        <th class="py-3 px-6 text-right">Volume</th>
-                                        <th class="py-3 px-6 text-right">Open Interest</th>
-                                        <th class="py-3 px-6 text-right">Implied Vol</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="putOptionsTable">
-                                    <tr>
-                                        <td colspan="7" class="py-4 text-center">
-                                            <div class="loading-spinner"></div>
-                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                // Execute the next request
+                const nextRequest = requestQueue.shift();
+                apiRequestsRemaining--;
+                lastRequestTime = now;
+                updateApiStatusDisplay();
                 
-                <div class="robinhood-card p-6">
-                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
-                    <div class="mb-6">
-                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
-                                <select id="marketDirection" class="custom-select w-full">
-                                    <option value="bullish">Bullish</option>
-                                    <option value="bearish">Bearish</option>
-                                    <option value="neutral">Neutral</option>
-                                    <option value="volatile">Volatile</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
-                                <select id="riskTolerance" class="custom-select w-full">
-                                    <option value="conservative">Conservative</option>
-                                    <option value="moderate">Moderate</option>
-                                    <option value="aggressive">Aggressive</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
-                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
-                            </div>
-                        </div>
-                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
-                    </div>
-                    <div id="strategySuggestions" class="hidden">
-                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
-                        <div id="strategyList" class="space-y-4">
-                            <!-- Strategy recommendations will be added here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Indices Tab Content -->
-            <div id="indices" class="tab-content">
-                <div class="flex flex-wrap -mx-4">
-                    <!-- Left Column - Index Chart and Analysis -->
-                    <div class="w-full lg:w-8/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <div>
-                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
-                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
-                                </div>
-                                <div class="text-right">
-                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
-                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
-                                </div>
-                            </div>
-                            <div class="mb-4 flex space-x-4">
-                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
-                                <button class="tab-button index-interval" data-interval="1W">1W</button>
-                                <button class="tab-button index-interval" data-interval="1M">1M</button>
-                                <button class="tab-button index-interval" data-interval="3M">3M</button>
-                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
-                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
-                            </div>
-                            <div>
-                                <canvas id="indexChart" height="300"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="robinhood-card p-6">
-                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
-                                <div id="
+                // Execute the request
+                nextRequest();
+                
+                // Process the next request after a short delay
+                setTimeout(processNextRequest, 200);
+            } else {
+                // Wait until we can make another request
+                const waitTime = 60000 - timeElapsed + 100; // Add 100ms buffer
+                
+                // Update status to show waiting
+                updateApiStatusDisplay(true, Math.ceil(waitTime / 1000));
+                
+                setTimeout(() => {
+                    apiRequestsRemaining = apiRequestsLimit;
+                    updateApiStatusDisplay();
+                    processNextRequest();
+                }, waitTime);
+            }
+        }
+        
+        function updateApiStatusDisplay(waiting = false, waitSeconds = 0) {
+            const apiStatusBadge = document.getElementById('apiStatusBadge');
+            
+            if (waiting) {
+                apiStatusBadge.textContent = `API: Rate Limited (${waitSeconds}s)`;
+                apiStatusBadge.className = 'api-status exhausted';
