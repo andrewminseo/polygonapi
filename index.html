@@ -21,8 +21,8 @@
             --danger-color: #FF5000;
             --neutral-color: #8A8A8A;
             --border-color: #363A45;
-            --polygon-purple: #6441A4;
-            --polygon-dark: #1B1535;
+            --yahoo-purple: #6001D2;
+            --yahoo-dark: #1D0F33;
         }
         
         body {
@@ -159,10 +159,10 @@
             margin: 0 auto;
         }
 
-        .polygon-loading-spinner {
+        .yahoo-loading-spinner {
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            border-top: 3px solid var(--polygon-purple);
+            border-top: 3px solid var(--yahoo-purple);
             width: 24px;
             height: 24px;
             animation: spin 1s linear infinite;
@@ -200,22 +200,22 @@
             color: #e0e0e0;
         }
         
-        /* Polygon.io branding */
-        .polygon-branding {
+        /* Yahoo Finance branding */
+        .yahoo-branding {
             display: flex;
             align-items: center;
             margin-left: 0.5rem;
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
-            background-color: var(--polygon-dark);
-            border: 1px solid var(--polygon-purple);
+            background-color: var(--yahoo-dark);
+            border: 1px solid var(--yahoo-purple);
         }
         
-        .polygon-logo {
+        .yahoo-logo {
             width: 20px;
             height: 20px;
             margin-right: 0.25rem;
-            background-color: var(--polygon-purple);
+            background-color: var(--yahoo-purple);
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -225,10 +225,10 @@
             color: white;
         }
         
-        .polygon-text {
+        .yahoo-text {
             font-size: 0.75rem;
             font-weight: 600;
-            color: var(--polygon-purple);
+            color: var(--yahoo-purple);
         }
         
         .api-status {
@@ -341,12 +341,12 @@
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center">
                 <h1 class="text-3xl font-bold text-white">Stock<span class="text-green-400">Sense</span></h1>
-                <div class="polygon-branding ml-4">
-                    <div class="polygon-logo">P</div>
-                    <div class="polygon-text">Polygon.io</div>
+                <div class="yahoo-branding ml-4">
+                    <div class="yahoo-logo">Y!</div>
+                    <div class="yahoo-text">Yahoo Finance</div>
                 </div>
                 <div id="apiStatusBadge" class="api-status available">
-                    API: 5/5 Remaining
+                    Ready
                 </div>
             </div>
             <div class="relative">
@@ -474,254 +474,3 @@
                                     <p class="text-gray-400 text-sm">P/E Ratio</p>
                                     <p id="stockPE" class="font-bold">0.00</p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - News and Sentiment -->
-                    <div class="w-full lg:w-4/12 px-4 mb-8">
-                        <div class="robinhood-card p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Market Sentiment</h3>
-                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
-                            </div>
-                            <div class="mb-4">
-                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
-                                <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
-                                </div>
-                                <div class="flex justify-between text-xs mt-1">
-                                    <span class="text-red-500">Sell</span>
-                                    <span class="text-yellow-500">Hold</span>
-                                    <span class="text-green-500">Buy</span>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Price Target:</span>
-                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="text-gray-400 text-sm">Upside:</span>
-                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
-                                </div>
-                                <div class="mb-4">
-                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
-                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-semibold mb-2">Latest Insights</h4>
-                                    <div id="latestInsights" class="insights-container">
-                                        <div class="text-center py-3 text-gray-400 text-sm">
-                                            <div class="polygon-loading-spinner mb-2"></div>
-                                            Loading insights...
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="robinhood-card p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Latest News</h3>
-                                <button id="refreshNews" class="p-1 rounded hover:bg-gray-700 transition-colors">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <div id="newsContainer">
-                                <div class="text-center py-8">
-                                    <div class="polygon-loading-spinner mb-3"></div>
-                                    <p class="text-gray-400">Loading news from Polygon.io...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Watchlist Tab Content -->
-            <div id="watchlist" class="tab-content">
-                <div class="robinhood-card p-6 mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold">Your Watchlist</h3>
-                        <div class="flex">
-                            <input type="text" id="addWatchlistInput" class="custom-input mr-2" placeholder="Add symbol...">
-                            <button id="addWatchlistBtn" class="btn-primary">Add</button>
-                        </div>
-                    </div>
-                    <div id="watchlistContainer" class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
-                            <thead>
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Symbol</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Company</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Change</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-700" id="watchlistTableBody">
-                                <!-- Watchlist items will be added here -->
-                                <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-400">
-                                        Your watchlist is empty. Add stocks to track them.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- JavaScript -->
-    <script>
-        // API Key for Polygon.io
-        const API_KEY = 'OzpY0a72peA3S0QIMAIq6Iuo78dwtSke';
-        
-        // Global Variables
-        let currentStock = 'AAPL';
-        let stockChart = null;
-        let sentimentChart = null;
-        let apiRequestsRemaining = 5;
-        const apiRequestsLimit = 5;
-        let lastRequestTime = 0;
-        let requestQueue = [];
-        let processingQueue = false;
-        
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tab Navigation
-            const tabButtons = document.querySelectorAll('.tab-button:not(.chart-interval)');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    button.classList.add('active');
-                    document.getElementById(button.dataset.tab).classList.add('active');
-                });
-            });
-            
-            // Chart Interval Navigation
-            const chartIntervals = document.querySelectorAll('.chart-interval');
-            
-            chartIntervals.forEach(interval => {
-                interval.addEventListener('click', () => {
-                    chartIntervals.forEach(int => int.classList.remove('active'));
-                    interval.classList.add('active');
-                    
-                    enqueueApiRequest(() => fetchStockData(currentStock, interval.dataset.interval));
-                });
-            });
-            
-            // Search Functionality
-            const searchInput = document.getElementById('searchInput');
-            const searchResults = document.getElementById('searchResults');
-            
-            searchInput.addEventListener('input', _.debounce(function() {
-                const query = searchInput.value.trim();
-                if (query.length < 2) {
-                    searchResults.classList.add('hidden');
-                    return;
-                }
-                
-                enqueueApiRequest(() => searchStocks(query));
-            }, 500));
-            
-            // Hide search results when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
-                    searchResults.classList.add('hidden');
-                }
-            });
-            
-            // Refresh News Button
-            document.getElementById('refreshNews').addEventListener('click', function() {
-                enqueueApiRequest(() => fetchStockNews(currentStock));
-            });
-            
-            // Watchlist functionality
-            document.getElementById('addWatchlistBtn').addEventListener('click', function() {
-                const symbol = document.getElementById('addWatchlistInput').value.trim().toUpperCase();
-                if (symbol) {
-                    addToWatchlist(symbol);
-                    document.getElementById('addWatchlistInput').value = '';
-                }
-            });
-            
-            // Initialize charts
-            initializeSentimentChart();
-            
-            // Initialize with default data
-            enqueueApiRequest(() => fetchStockData(currentStock, '1M'));
-            enqueueApiRequest(() => fetchStockDetails(currentStock));
-            enqueueApiRequest(() => fetchStockNews(currentStock));
-            
-            // Load watchlist from localStorage
-            loadWatchlist();
-        });
-        
-        // API Request Rate Limiting
-        function enqueueApiRequest(requestFunction) {
-            requestQueue.push(requestFunction);
-            updateApiStatusDisplay();
-            
-            if (!processingQueue) {
-                processNextRequest();
-            }
-        }
-        
-        function processNextRequest() {
-            if (requestQueue.length === 0) {
-                processingQueue = false;
-                return;
-            }
-            
-            processingQueue = true;
-            
-            const now = Date.now();
-            const timeElapsed = now - lastRequestTime;
-            
-            // If we have requests available or enough time has passed (rate limit is per minute)
-            if (apiRequestsRemaining > 0 || timeElapsed >= 60000) {
-                // If enough time has passed, reset the counter
-                if (timeElapsed >= 60000) {
-                    apiRequestsRemaining = apiRequestsLimit;
-                }
-                
-                // Execute the next request
-                const nextRequest = requestQueue.shift();
-                apiRequestsRemaining--;
-                lastRequestTime = now;
-                updateApiStatusDisplay();
-                
-                // Execute the request
-                nextRequest();
-                
-                // Process the next request after a short delay
-                setTimeout(processNextRequest, 200);
-            } else {
-                // Wait until we can make another request
-                const waitTime = 60000 - timeElapsed + 100; // Add 100ms buffer
-                
-                // Update status to show waiting
-                updateApiStatusDisplay(true, Math.ceil(waitTime / 1000));
-                
-                setTimeout(() => {
-                    apiRequestsRemaining = apiRequestsLimit;
-                    updateApiStatusDisplay();
-                    processNextRequest();
-                }, waitTime);
-            }
-        }
-        
-        function updateApiStatusDisplay(waiting = false, waitSeconds = 0) {
-            const apiStatusBadge = document.getElementById('apiStatusBadge');
-            
-            if (waiting) {
-                apiStatusBadge.textContent = `API: Rate Limited (${waitSeconds}s)`;
-                apiStatusBadge.className = 'api-status exhausted';
