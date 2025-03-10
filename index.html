@@ -720,3 +720,22 @@
                         stockData.details = data.results;
                         displayStockSummary(data.results);
                     } else {
+                        $('#stockSummary').html('<div class="alert alert-danger">Error: Could not find stock details</div>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching stock details:', error);
+                    $('#stockSummary').html('<div class="alert alert-danger">Error fetching stock details</div>');
+                });
+            
+            // Get stock price data
+            fetch(`https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${fromDate}/${today}?adjusted=true&sort=asc&apiKey=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK' && data.results && data.results.length > 0) {
+                        stockData.prices = data.results;
+                        displayStockChart(data.results, ticker);
+                        analyzeStockData(data.results, ticker);
+                    } else {
+                        $('#stockChart').html('<div class="alert alert-danger">Error: No stock data available</div>');
+                        $('#stockAnal
