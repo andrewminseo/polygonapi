@@ -3,166 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarketInsight Pro - Stock Analysis & Predictions</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>StockSense - Comprehensive Market Analysis</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.0/chartjs-adapter-moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --dark-color: #212529;
-            --light-color: #f8f9fa;
+            --primary-color: #00C805;
+            --secondary-color: #1E2124;
+            --bg-color: #0E0F12;
+            --card-color: #1E2124;
+            --text-color: #FFFFFF;
+            --success-color: #00C805;
+            --danger-color: #FF5000;
+            --neutral-color: #8A8A8A;
+            --border-color: #363A45;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f8fa;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-        
-        .nav-link {
-            font-weight: 500;
-        }
-        
-        .tab-content {
-            padding: 20px 0;
-        }
-        
-        .card {
-            border-radius: 10px;
+        .robinhood-card {
+            background-color: var(--card-color);
+            border-radius: 0.75rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            transition: transform 0.3s;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
         }
         
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-header {
-            border-top-left-radius: 10px !important;
-            border-top-right-radius: 10px !important;
-            font-weight: 600;
-        }
-        
-        .ticker-search {
+        .tab-button {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
             position: relative;
         }
         
-        .search-results {
+        .tab-button.active::after {
+            content: '';
             position: absolute;
-            top: 100%;
+            bottom: 0;
             left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            z-index: 10;
-            max-height: 200px;
-            overflow-y: auto;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab-button.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content {
             display: none;
         }
         
-        .search-results div {
-            padding: 10px;
+        .tab-content.active {
+            display: block;
+        }
+        
+        .positive {
+            color: var(--success-color);
+        }
+        
+        .negative {
+            color: var(--danger-color);
+        }
+        
+        .custom-input {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .custom-input:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            transition: all 0.2s ease;
         }
         
-        .search-results div:hover {
-            background-color: #f8f9fa;
+        .btn-primary:hover {
+            opacity: 0.9;
         }
         
-        .chart-container {
-            height: 400px;
-            width: 100%;
+        .custom-select {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
         }
         
-        .news-card {
-            height: 600px;
-            overflow-y: auto;
+        .custom-select:focus {
+            border-color: var(--primary-color);
         }
         
-        .prediction-card {
-            height: 250px;
+        .timeline-item {
+            position: relative;
+            padding-left: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-left: 2px solid var(--border-color);
         }
         
-        .news-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
         }
         
-        .news-item:last-child {
-            border-bottom: none;
-        }
-        
-        .news-item h5 {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        
-        .news-item .news-date {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        
-        .news-item .sentiment {
-            font-weight: 600;
-            font-size: 0.8rem;
-            padding: 2px 8px;
-            border-radius: 12px;
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
         }
         
         .sentiment-positive {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #28a745;
+            color: var(--success-color);
         }
         
         .sentiment-negative {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
+            color: var(--danger-color);
         }
         
         .sentiment-neutral {
-            background-color: rgba(108, 117, 125, 0.2);
-            color: #6c757d;
+            color: var(--neutral-color);
         }
         
-        .option-item {
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            transition: all 0.3s;
+        .trend-line {
+            position: absolute;
+            height: 2px;
+            background-color: yellow;
+            opacity: 0.5;
+            z-index: 1;
         }
         
-        .option-item:hover {
-            background-color: #f8f9fa;
-            border-color: #dee2e6;
+        .support-line {
+            position: absolute;
+            height: 2px;
+            background-color: green;
+            opacity: 0.5;
+            z-index: 1;
         }
         
-        .option-call {
-            border-left: 4px solid #28a745;
+        .resistance-line {
+            position: absolute;
+            height: 2px;
+            background-color: red;
+            opacity: 0.5;
+            z-index: 1;
         }
         
-        .option-put {
-            border-left: 4px solid #dc3545;
+        .option-card {
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
         }
         
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary-color);
+        .option-card.call {
+            border-left-color: var(--success-color);
+        }
+        
+        .option-card.put {
+            border-left-color: var(--danger-color);
+        }
+        
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+            border-top: 3px solid var(--primary-color);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
         
         @keyframes spin {
@@ -170,572 +224,442 @@
             100% { transform: rotate(360deg); }
         }
         
-        .data-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
         
-        .data-positive {
-            background-color: #28a745;
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
         }
         
-        .data-negative {
-            background-color: #dc3545;
+        ::-webkit-scrollbar-thumb {
+            background: #4A4D57;
+            border-radius: 3px;
         }
         
-        .data-neutral {
-            background-color: #6c757d;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5A5D67;
         }
         
-        .trend-indicator {
-            font-size: 1.2rem;
-            margin-right: 5px;
-        }
-        
-        .trend-up {
-            color: #28a745;
-        }
-        
-        .trend-down {
-            color: #dc3545;
-        }
-        
-        .trend-neutral {
-            color: #6c757d;
-        }
-        
-        .index-card {
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .index-name {
+        .predict-tag {
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
             font-weight: 600;
-            font-size: 1.1rem;
+            display: inline-block;
         }
         
-        .index-value {
-            font-size: 1.2rem;
-            font-weight: 700;
+        .predict-buy {
+            background-color: rgba(0, 200, 5, 0.2);
+            color: var(--success-color);
         }
         
-        #indexAnalysisTrendlines {
-            height: 400px;
+        .predict-sell {
+            background-color: rgba(255, 80, 0, 0.2);
+            color: var(--danger-color);
         }
         
-        .table-fixed {
-            table-layout: fixed;
+        .predict-hold {
+            background-color: rgba(138, 138, 138, 0.2);
+            color: var(--neutral-color);
         }
         
-        .table-fixed td, .table-fixed th {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
         }
         
-        #stockTicker {
-            text-transform: uppercase;
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 150%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .flex-col-mobile {
+                flex-direction: column;
+            }
+            
+            .w-full-mobile {
+                width: 100%;
+            }
+            
+            .px-2-mobile {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-chart-line me-2"></i>MarketInsight Pro
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" id="stocksTab" data-bs-toggle="tab" data-bs-target="#stocks">Stocks</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="optionsTab" data-bs-toggle="tab" data-bs-target="#options">Options</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="indicesTab" data-bs-toggle="tab" data-bs-target="#indices">Indices</a>
-                    </li>
-                </ul>
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <h1 class="text-3xl font-bold text-white">Stock<span class="text-green-400">Sense</span></h1>
             </div>
-        </div>
-    </nav>
+            <div class="relative">
+                <input type="text" id="searchInput" class="custom-input w-64 pl-10" placeholder="Search stocks...">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <div id="searchResults" class="absolute top-full left-0 w-full bg-gray-800 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto hidden"></div>
+            </div>
+        </header>
 
-    <div class="container mt-4">
-        <div class="tab-content">
-            <!-- Stocks Tab -->
-            <div class="tab-pane fade show active" id="stocks">
-                <div class="row mb-4">
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-search me-2"></i>Stock Search
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-8">
-                                        <label for="stockTicker" class="form-label">Enter Stock Ticker</label>
-                                        <div class="ticker-search">
-                                            <input type="text" class="form-control" id="stockTicker" placeholder="e.g., AAPL">
-                                            <div class="search-results" id="searchResults"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="timeRange" class="form-label">Time Range</label>
-                                        <select class="form-select" id="timeRange">
-                                            <option value="1D">1 Day</option>
-                                            <option value="1W">1 Week</option>
-                                            <option value="1M" selected>1 Month</option>
-                                            <option value="3M">3 Months</option>
-                                            <option value="6M">6 Months</option>
-                                            <option value="1Y">1 Year</option>
-                                            <option value="YTD">Year to Date</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12">
-                                        <button id="searchStockBtn" class="btn btn-primary mt-2">
-                                            <i class="fas fa-chart-line me-2"></i>Analyze Stock
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="card prediction-card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-chart-pie me-2"></i>Stock Summary
-                            </div>
-                            <div class="card-body" id="stockSummary">
-                                <div class="text-center">
-                                    <p class="text-muted">Enter a stock ticker to see summary information</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-chart-area me-2"></i>Stock Chart & Trendlines
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container" id="stockChart">
-                                    <div class="text-center py-5">
-                                        <p class="text-muted">Enter a stock ticker to view chart</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card mt-4">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-robot me-2"></i>Stock Analysis & Predictions
-                            </div>
-                            <div class="card-body" id="stockAnalysis">
-                                <div class="text-center">
-                                    <p class="text-muted">Enter a stock ticker to see analysis</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="card news-card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-newspaper me-2"></i>News & Sentiment Analysis
-                            </div>
-                            <div class="card-body p-0" id="newsContainer">
-                                <div class="text-center py-5">
-                                    <p class="text-muted">Enter a stock ticker to see related news</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Main Content -->
+        <main>
+            <!-- Tabs -->
+            <div class="border-b border-gray-700 mb-6">
+                <div class="flex space-x-2">
+                    <button class="tab-button active" data-tab="stocks">Stocks</button>
+                    <button class="tab-button" data-tab="options">Options</button>
+                    <button class="tab-button" data-tab="indices">Indices</button>
                 </div>
             </div>
 
-            <!-- Options Tab -->
-            <div class="tab-pane fade" id="options">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-search me-2"></i>Options Lookup
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="optionsStockTicker" class="form-label">Underlying Stock</label>
-                                        <input type="text" class="form-control" id="optionsStockTicker" placeholder="e.g., AAPL">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="expirationDate" class="form-label">Expiration Date</label>
-                                        <select class="form-select" id="expirationDate">
-                                            <option value="">Select expiration date</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12">
-                                        <button id="searchOptionsBtn" class="btn btn-primary mt-2">
-                                            <i class="fas fa-search me-2"></i>Find Options
-                                        </button>
-                                    </div>
+            <!-- Stock Tab Content -->
+            <div id="stocks" class="tab-content active">
+                <div class="flex flex-wrap -mx-4">
+                    <!-- Left Column - Stock Chart and Analysis -->
+                    <div class="w-full lg:w-8/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 id="stockSymbol" class="text-2xl font-bold">AAPL</h2>
+                                    <p id="stockName" class="text-gray-400">Apple Inc.</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 id="stockPrice" class="text-2xl font-bold">$0.00</h3>
+                                    <p id="stockChange" class="text-sm">0.00 (0.00%)</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-lightbulb me-2"></i>Options Strategy Suggestions
+                            <div class="mb-4 flex space-x-4">
+                                <button class="tab-button active chart-interval" data-interval="1D">1D</button>
+                                <button class="tab-button chart-interval" data-interval="1W">1W</button>
+                                <button class="tab-button chart-interval" data-interval="1M">1M</button>
+                                <button class="tab-button chart-interval" data-interval="3M">3M</button>
+                                <button class="tab-button chart-interval" data-interval="1Y">1Y</button>
+                                <button class="tab-button chart-interval" data-interval="YTD">YTD</button>
                             </div>
-                            <div class="card-body" id="optionsStrategies">
-                                <div class="text-center">
-                                    <p class="text-muted">Enter a stock ticker to see options strategies</p>
-                                </div>
+                            <div class="relative">
+                                <canvas id="stockChart" height="300"></canvas>
+                                <div id="trendLines"></div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-table me-2"></i>Options Chain
-                            </div>
-                            <div class="card-body">
-                                <ul class="nav nav-tabs" id="optionTypeTab" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="calls-tab" data-bs-toggle="tab" data-bs-target="#calls" type="button" role="tab" aria-controls="calls" aria-selected="true">Calls</button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="puts-tab" data-bs-toggle="tab" data-bs-target="#puts" type="button" role="tab" aria-controls="puts" aria-selected="false">Puts</button>
-                                    </li>
-                                </ul>
-                                <div class="tab-content mt-3" id="optionTypeTabContent">
-                                    <div class="tab-pane fade show active" id="calls" role="tabpanel" aria-labelledby="calls-tab">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-hover table-fixed">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Strike</th>
-                                                        <th>Last Price</th>
-                                                        <th>Bid</th>
-                                                        <th>Ask</th>
-                                                        <th>Volume</th>
-                                                        <th>Open Interest</th>
-                                                        <th>Implied Vol</th>
-                                                        <th>Analysis</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="callsTableBody">
-                                                    <tr>
-                                                        <td colspan="8" class="text-center">Enter a stock ticker to see options data</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="puts" role="tabpanel" aria-labelledby="puts-tab">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-hover table-fixed">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Strike</th>
-                                                        <th>Last Price</th>
-                                                        <th>Bid</th>
-                                                        <th>Ask</th>
-                                                        <th>Volume</th>
-                                                        <th>Open Interest</th>
-                                                        <th>Implied Vol</th>
-                                                        <th>Analysis</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="putsTableBody">
-                                                    <tr>
-                                                        <td colspan="8" class="text-center">Enter a stock ticker to see options data</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Technical Analysis</h3>
+                                <div id="technicalAnalysis">
+                                    <div class="loading-spinner"></div>
                                 </div>
+                            </div>
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Prediction</h3>
+                                <div id="stockPrediction">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Stock Details</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Open</p>
+                                    <p id="stockOpen" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">High</p>
+                                    <p id="stockHigh" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Low</p>
+                                    <p id="stockLow" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Prev Close</p>
+                                    <p id="stockPrevClose" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Volume</p>
+                                    <p id="stockVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Avg Volume</p>
+                                    <p id="stockAvgVolume" class="font-bold">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Market Cap</p>
+                                    <p id="stockMarketCap" class="font-bold">$0.00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">P/E Ratio</p>
+                                    <p id="stockPE" class="font-bold">0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - News and Sentiment -->
+                    <div class="w-full lg:w-4/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold">Market Sentiment</h3>
+                                <span id="overallSentiment" class="predict-tag predict-hold">NEUTRAL</span>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-gray-400 text-sm block mb-2">Analyst Recommendations</label>
+                                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                    <div id="sentimentIndicator" class="bg-green-500 h-2.5 rounded-full" style="width: 50%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-red-500">Sell</span>
+                                    <span class="text-yellow-500">Hold</span>
+                                    <span class="text-green-500">Buy</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Price Target:</span>
+                                    <span id="priceTarget" class="font-bold ml-2">$0.00</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-gray-400 text-sm">Upside:</span>
+                                    <span id="priceUpside" class="font-bold ml-2">0.00%</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 text-sm">AI Prediction:</span>
+                                    <span id="aiPrediction" class="font-bold ml-2">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="robinhood-card p-6">
+                            <h3 class="text-xl font-bold mb-4">Latest News</h3>
+                            <div id="newsContainer">
+                                <div class="loading-spinner"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Indices Tab -->
-            <div class="tab-pane fade" id="indices">
-                <div class="row mb-4">
-                    <div class="col-lg-12">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-globe me-2"></i>Major Market Indices
+            <!-- Options Tab Content -->
+            <div id="options" class="tab-content">
+                <div class="robinhood-card p-6 mb-6">
+                    <div class="flex flex-wrap -mx-2 mb-4 items-end">
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Symbol</label>
+                            <input type="text" id="optionsSymbol" class="custom-input w-full md:w-40" placeholder="e.g. AAPL">
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <label class="text-gray-400 text-sm block mb-2">Expiration Date</label>
+                            <select id="expirationDate" class="custom-select w-full md:w-48">
+                                <option value="">Select date</option>
+                            </select>
+                        </div>
+                        <div class="w-full md:w-auto px-2 mb-4 md:mb-0">
+                            <button id="loadOptions" class="btn-primary w-full md:w-auto">
+                                Load Options
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="optionsSymbolInfo" class="mb-6 hidden">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 id="optionsStockSymbol" class="text-2xl font-bold">Symbol</h2>
+                                <p id="optionsStockName" class="text-gray-400">Company Name</p>
                             </div>
-                            <div class="card-body">
-                                <div class="row" id="majorIndices">
-                                    <div class="col-md-3">
-                                        <div class="index-card">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div class="index-name">S&P 500</div>
-                                                    <small>I:SPX</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="index-value" id="spxValue">-</div>
-                                                    <div class="index-change" id="spxChange">-</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="index-card">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div class="index-name">Dow Jones</div>
-                                                    <small>I:DJI</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="index-value" id="djiValue">-</div>
-                                                    <div class="index-change" id="djiChange">-</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="index-card">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div class="index-name">NASDAQ</div>
-                                                    <small>I:COMP</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="index-value" id="compValue">-</div>
-                                                    <div class="index-change" id="compChange">-</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="index-card">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div class="index-name">Russell 2000</div>
-                                                    <small>I:RUT</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="index-value" id="rutValue">-</div>
-                                                    <div class="index-change" id="rutChange">-</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="text-right">
+                                <h3 id="optionsStockPrice" class="text-2xl font-bold">$0.00</h3>
+                                <p id="optionsStockChange" class="text-sm">0.00 (0.00%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex mb-4 border-b border-gray-700">
+                        <button class="tab-button active options-type-tab" data-type="suggested">Suggested</button>
+                        <button class="tab-button options-type-tab" data-type="calls">Calls</button>
+                        <button class="tab-button options-type-tab" data-type="puts">Puts</button>
+                    </div>
+                    
+                    <div id="suggestedOptions" class="options-content">
+                        <div class="text-center py-4" id="suggestedOptionsLoader">
+                            <div class="loading-spinner"></div>
+                            <p class="text-gray-400 mt-2">Loading suggestions...</p>
+                        </div>
+                        <div id="suggestedOptionsContent" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Market Outlook</h4>
+                                    <p id="marketOutlook" class="text-gray-300 text-sm">Analyzing market conditions...</p>
+                                </div>
+                                <div class="robinhood-card p-4">
+                                    <h4 class="text-lg font-bold mb-2">Volatility Analysis</h4>
+                                    <p id="volatilityAnalysis" class="text-gray-300 text-sm">Analyzing volatility...</p>
                                 </div>
                             </div>
+                            <h4 class="text-lg font-bold mb-4">Top Recommendations</h4>
+                            <div id="recommendedOptions" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- Recommendations will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="callOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="callOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="putOptions" class="options-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-3 px-6 text-left">Strike</th>
+                                        <th class="py-3 px-6 text-right">Last Price</th>
+                                        <th class="py-3 px-6 text-right">Bid</th>
+                                        <th class="py-3 px-6 text-right">Ask</th>
+                                        <th class="py-3 px-6 text-right">Volume</th>
+                                        <th class="py-3 px-6 text-right">Open Interest</th>
+                                        <th class="py-3 px-6 text-right">Implied Vol</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="putOptionsTable">
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center">
+                                            <div class="loading-spinner"></div>
+                                            <p class="text-gray-400 mt-2">Select a symbol and expiration date</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-chart-line me-2"></i>Index Performance & Trendlines
+                
+                <div class="robinhood-card p-6">
+                    <h3 class="text-xl font-bold mb-4">Options Strategy Builder</h3>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">Build custom options strategies based on your market outlook and risk tolerance.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Market Outlook</label>
+                                <select id="marketDirection" class="custom-select w-full">
+                                    <option value="bullish">Bullish</option>
+                                    <option value="bearish">Bearish</option>
+                                    <option value="neutral">Neutral</option>
+                                    <option value="volatile">Volatile</option>
+                                </select>
                             </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <select class="form-select" id="indexSelector">
-                                        <option value="I:SPX" selected>S&P 500 (SPX)</option>
-                                        <option value="I:DJI">Dow Jones Industrial Average (DJI)</option>
-                                        <option value="I:COMP">NASDAQ Composite (COMP)</option>
-                                        <option value="I:RUT">Russell 2000 (RUT)</option>
-                                    </select>
-                                </div>
-                                <div class="chart-container" id="indexChart">
-                                    <div class="text-center py-5">
-                                        <div class="loader"></div>
-                                        <p class="text-muted mt-2">Loading index data...</p>
-                                    </div>
-                                </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Risk Tolerance</label>
+                                <select id="riskTolerance" class="custom-select w-full">
+                                    <option value="conservative">Conservative</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="aggressive">Aggressive</option>
+                                </select>
                             </div>
-                        </div>
-                        
-                        <div class="card mt-4">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-robot me-2"></i>Index Analysis & Market Outlook
-                            </div>
-                            <div class="card-body" id="indexAnalysis">
-                                <div class="text-center py-5">
-                                    <div class="loader"></div>
-                                    <p class="text-muted mt-2">Analyzing market data...</p>
-                                </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-2">Budget</label>
+                                <input type="number" id="optionsBudget" class="custom-input w-full" placeholder="Max budget ($)">
                             </div>
                         </div>
+                        <button id="suggestStrategies" class="btn-primary">Suggest Strategies</button>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-newspaper me-2"></i>Market News & Sentiment
-                            </div>
-                            <div class="card-body p-0" id="marketNewsContainer">
-                                <div class="text-center py-5">
-                                    <div class="loader"></div>
-                                    <p class="text-muted mt-2">Loading market news...</p>
-                                </div>
-                            </div>
+                    <div id="strategySuggestions" class="hidden">
+                        <h4 class="text-lg font-bold mb-4">Recommended Strategies</h4>
+                        <div id="strategyList" class="space-y-4">
+                            <!-- Strategy recommendations will be added here -->
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <footer class="bg-dark text-white text-center py-4 mt-5">
-        <div class="container">
-            <p class="mb-0">MarketInsight Pro &copy; 2025 | Powered by Polygon.io API</p>
-            <p class="small text-muted">Disclaimer: All market data and analysis are for informational purposes only and do not constitute financial advice.</p>
-        </div>
-    </footer>
+            <!-- Indices Tab Content -->
+            <div id="indices" class="tab-content">
+                <div class="flex flex-wrap -mx-4">
+                    <!-- Left Column - Index Chart and Analysis -->
+                    <div class="w-full lg:w-8/12 px-4 mb-8">
+                        <div class="robinhood-card p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 id="indexSymbol" class="text-2xl font-bold">SPX</h2>
+                                    <p id="indexName" class="text-gray-400">S&P 500 Index</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 id="indexValue" class="text-2xl font-bold">0.00</h3>
+                                    <p id="indexChange" class="text-sm">0.00 (0.00%)</p>
+                                </div>
+                            </div>
+                            <div class="mb-4 flex space-x-4">
+                                <button class="tab-button active index-interval" data-interval="1D">1D</button>
+                                <button class="tab-button index-interval" data-interval="1W">1W</button>
+                                <button class="tab-button index-interval" data-interval="1M">1M</button>
+                                <button class="tab-button index-interval" data-interval="3M">3M</button>
+                                <button class="tab-button index-interval" data-interval="1Y">1Y</button>
+                                <button class="tab-button index-interval" data-interval="YTD">YTD</button>
+                            </div>
+                            <div>
+                                <canvas id="indexChart" height="300"></canvas>
+                            </div>
+                        </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
-    <script>
-        // API Key for Polygon.io
-        const API_KEY = 'OzpY0a72peA3S0QIMAIq6Iuo78dwtSke';
-        
-        // Initialize variables to store data
-        let stockData = {};
-        let newsData = {};
-        let optionsData = {};
-        let indicesData = {};
-        
-        // Stock chart instance
-        let stockChartInstance = null;
-        let indexChartInstance = null;
-        
-        // DOM Ready
-        $(document).ready(function() {
-            // Initialize tabs
-            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
-                if (e.target.id === 'indicesTab') {
-                    loadMajorIndices();
-                    loadIndexData('I:SPX');
-                }
-            });
-            
-            // Initialize stock search
-            $('#searchStockBtn').click(function() {
-                const ticker = $('#stockTicker').val().trim().toUpperCase();
-                if (ticker) {
-                    searchStock(ticker);
-                }
-            });
-            
-            // Initialize options search
-            $('#searchOptionsBtn').click(function() {
-                const ticker = $('#optionsStockTicker').val().trim().toUpperCase();
-                if (ticker) {
-                    searchOptions(ticker);
-                }
-            });
-            
-            // Initialize index selector
-            $('#indexSelector').change(function() {
-                loadIndexData($(this).val());
-            });
-            
-            // Load initial index data
-            loadMajorIndices();
-            
-            // Handle enter key in search boxes
-            $('#stockTicker').keypress(function(e) {
-                if (e.which === 13) {
-                    $('#searchStockBtn').click();
-                }
-            });
-            
-            $('#optionsStockTicker').keypress(function(e) {
-                if (e.which === 13) {
-                    $('#searchOptionsBtn').click();
-                }
-            });
-        });
-        
-        // Function to search for a stock
-        function searchStock(ticker) {
-            // Show loading indicators
-            $('#stockChart').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading stock data...</p></div>');
-            $('#stockAnalysis').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Analyzing stock data...</p></div>');
-            $('#newsContainer').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading news data...</p></div>');
-            $('#stockSummary').html('<div class="text-center py-5"><div class="loader"></div><p class="text-muted mt-2">Loading summary data...</p></div>');
-            
-            // Get time range
-            const timeRange = $('#timeRange').val();
-            let fromDate, toDate;
-            const today = moment().format('YYYY-MM-DD');
-            
-            switch (timeRange) {
-                case '1D':
-                    fromDate = moment().subtract(1, 'days').format('YYYY-MM-DD');
-                    break;
-                case '1W':
-                    fromDate = moment().subtract(1, 'weeks').format('YYYY-MM-DD');
-                    break;
-                case '1M':
-                    fromDate = moment().subtract(1, 'months').format('YYYY-MM-DD');
-                    break;
-                case '3M':
-                    fromDate = moment().subtract(3, 'months').format('YYYY-MM-DD');
-                    break;
-                case '6M':
-                    fromDate = moment().subtract(6, 'months').format('YYYY-MM-DD');
-                    break;
-                case '1Y':
-                    fromDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
-                    break;
-                case 'YTD':
-                    fromDate = moment().startOf('year').format('YYYY-MM-DD');
-                    break;
-            }
-            
-            // First, get stock details
-            fetch(`https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results) {
-                        stockData.details = data.results;
-                        displayStockSummary(data.results);
-                    } else {
-                        $('#stockSummary').html('<div class="alert alert-danger">Error: Could not find stock details</div>');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching stock details:', error);
-                    $('#stockSummary').html('<div class="alert alert-danger">Error fetching stock details</div>');
-                });
-            
-            // Get stock price data
-            fetch(`https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${fromDate}/${today}?adjusted=true&sort=asc&apiKey=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK' && data.results && data.results.length > 0) {
-                        stockData.prices = data.results;
-                        displayStockChart(data.results, ticker);
-                        analyzeStockData(data.results, ticker);
-                    } else {
-                        $('#stockChart').html('<div class="alert alert-danger">Error: No stock data available</div>');
-                        $('#stockAnal
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="robinhood-card p-6">
+                                <h3 class="text-xl font-bold mb-4">Market Analysis</h3>
+                                <div id="indexAnalysis">
+                                    <div class="loading-spinner"></div>
